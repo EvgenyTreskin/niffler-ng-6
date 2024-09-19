@@ -18,7 +18,7 @@ public class MainPage {
     private final SelenideElement profileButton = $(byText("Profile"));
     private final SelenideElement imageInput = $(".image__input-label");
 
-
+//try to correct PR
     public EditSpendingPage editSpending(String spendingDescription) {
         tableRows.find(text(spendingDescription)).$$("td").get(5).click();
         return new EditSpendingPage();
