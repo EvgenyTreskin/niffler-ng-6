@@ -8,71 +8,93 @@ import static com.codeborne.selenide.Condition.disabled;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.value;
 import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Selectors.byText;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
 
 public class ProfilePage {
 
-  private final SelenideElement avatar = $("#image__input").parent().$("img");
-  private final SelenideElement userName = $("#username");
-  private final SelenideElement nameInput = $("#name");
-  private final SelenideElement photoInput = $("input[type='file']");
-  private final SelenideElement submitButton = $("button[type='submit']");
-  private final SelenideElement categoryInput = $("input[name='category']");
-  private final SelenideElement archivedSwitcher = $(".MuiSwitch-input");
-  private final ElementsCollection bubbles = $$(".MuiChip-filled.MuiChip-colorPrimary");
-  private final ElementsCollection bubblesArchived = $$(".MuiChip-filled.MuiChip-colorDefault");
+  private final SelenideElement
+          imageUpload = $(".image__input-label"),
+          saveChangesButton = $(":r1:"),
+          inputName = $("#name"),
+          showArchivedCheckBox = $("[type='checkbox']"),
+          inputCategory = $("#category"),
+          alertSuccessUpdate = $("[role='alert']"),
+          closeAlert = $("[data-testid='CloseIcon']"),
+          closeOrArchiveCategoryOrUnarchive = $(".MuiDialogActions-spacing");
 
 
   public ProfilePage setName(String name) {
-    nameInput.clear();
-    nameInput.setValue(name);
-    return this;
+    inputName.setValue(name);
+
+    return new ProfilePage();
   }
 
-  public ProfilePage uploadPhotoFromClasspath(String path) {
-    photoInput.uploadFromClasspath(path);
-    return this;
+  public ProfilePage setCategory(String category) {
+    inputCategory.setValue(category);
+
+    return new ProfilePage();
   }
 
-  public ProfilePage addCategory(String category) {
-    categoryInput.setValue(category).pressEnter();
-    return this;
+  public ProfilePage clickOnCheckboxShowArchived() {
+    showArchivedCheckBox.click();
+
+    return new ProfilePage();
   }
 
-  public ProfilePage checkCategoryExists(String category) {
-    bubbles.find(text(category)).shouldBe(visible);
-    return this;
+  public ProfilePage clickOnSaveChangesButton() {
+    saveChangesButton.click();
+
+    return new ProfilePage();
   }
 
-  public ProfilePage checkArchivedCategoryExists(String category) {
-    archivedSwitcher.click();
-    bubblesArchived.find(text(category)).shouldBe(visible);
-    return this;
+  public void uploadImage() {
+    imageUpload.click();
   }
 
-  public ProfilePage checkUsername(String username) {
-    this.userName.should(value(username));
-    return this;
+  public void checkAlertSuccessfulUpdateAndCloseAlert() {
+    alertSuccessUpdate.shouldHave(text("Profile successfully updated"));
+    closeAlert.click();
   }
 
-  public ProfilePage checkName(String name) {
-    nameInput.shouldHave(value(name));
-    return this;
+  public ProfilePage clickCloseOrArchiveOrUnarchiveCategory(String closeOrArchiveOrUnarchive) {
+    closeOrArchiveCategoryOrUnarchive.$(byText(closeOrArchiveOrUnarchive)).click();
+
+    return new ProfilePage();
   }
 
-  public ProfilePage checkPhotoExist() {
-    avatar.should(attributeMatching("src", "data:image.*"));
-    return this;
+  public ProfilePage checkCategoryByNameInProfile(String nameCategory) {
+    $(".MuiGrid-root.MuiGrid-container.MuiGrid-spacing-xs-2.css-3w20vr")
+            .shouldHave(text(nameCategory));
+
+    return new ProfilePage();
   }
 
-  public ProfilePage checkThatCategoryInputDisabled() {
-    categoryInput.should(disabled);
-    return this;
+  public ProfilePage checkNotCategoryByNameInProfile(String nameCategory) {
+    $(".MuiGrid-root.MuiGrid-container.MuiGrid-spacing-xs-2.css-3w20vr")
+            .shouldNotHave(text(nameCategory));
+
+    return new ProfilePage();
   }
 
-  public ProfilePage submitProfile() {
-    submitButton.click();
-    return this;
+  public ProfilePage clickArchiveCategory(String name) {
+    $$("[class='MuiBox-root css-1lekzkb']")
+            .filter(text(name))
+            .first()
+            .$("button[aria-label='Archive category']")
+            .click();
+
+    return new ProfilePage();
+  }
+
+  public ProfilePage clickUnarchiveCategory(String name) {
+    $$("[class='MuiBox-root css-1lekzkb']")
+            .filter(text(name))
+            .first()
+            .$("[data-testid='UnarchiveOutlinedIcon']")
+            .click();
+
+    return new ProfilePage();
   }
 }
