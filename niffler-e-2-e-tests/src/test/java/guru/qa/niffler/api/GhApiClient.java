@@ -22,7 +22,7 @@ public class GhApiClient {
   @SneakyThrows
   public String issueState(String issueNumber) {
     JsonNode responseBody = ghApi.issue(
-        "Bearer " + System.getenv(GH_TOKEN_ENV),
+//        "Bearer " + System.getenv(GH_TOKEN_ENV), do this if call (@Header("Authorization")String YOUR_TOKEN) in JSON
         issueNumber
     ).execute().body();
     return Objects.requireNonNull(responseBody).get("state").asText();
