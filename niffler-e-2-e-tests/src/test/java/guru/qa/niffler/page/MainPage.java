@@ -18,6 +18,8 @@ public class MainPage {
     private final SelenideElement personMenu = $("[role='menu']");
     private final SelenideElement profileButton = $(byText("Profile"));
     private final SelenideElement imageInput = $(".image__input-label");
+    private final SelenideElement friendsButton = $("a[href = '/people/friends']");
+    private final SelenideElement allPeopleButton = $("a[href = '/people/all']");
 
     public EditSpendingPage editSpending(String spendingDescription) {
         tableRows.find(text(spendingDescription)).$$("td").get(5).click();
@@ -38,7 +40,18 @@ public class MainPage {
         personMenu.shouldBe(visible);
         profileButton.click();
         imageInput.shouldBe(visible);
-
         return new ProfilePage();
+    }
+
+    public FriendsPage clickToFriendsButton() {
+        personIcon.click();
+        friendsButton.click();
+        return new FriendsPage();
+    }
+
+    public FriendsPage clickToAllPeopleButton() {
+        personIcon.click();
+        allPeopleButton.click();
+        return new FriendsPage();
     }
 }
