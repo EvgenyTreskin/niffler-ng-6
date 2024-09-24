@@ -38,6 +38,7 @@ public class ProfilePage {
   }
 
   public ProfilePage clickOnCheckboxShowArchived() {
+    showArchivedCheckBox.scrollIntoView(false);
     showArchivedCheckBox.click();
 
     return new ProfilePage();
