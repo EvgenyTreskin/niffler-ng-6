@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.jupiter.extension.BrowserExtension;
 import guru.qa.niffler.page.LoginPage;
+import guru.qa.niffler.utils.RandomDataUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -14,10 +15,9 @@ import static com.codeborne.selenide.Selenide.open;
 public class SignUpWebTest {
 
     private static final Config CFG = Config.getInstance();
-    private static final Faker faker = new Faker();
 
-    private final String login = faker.name().username();
-    private final String password = faker.internet().password(3, 12);
+    private final String login = RandomDataUtils.randomUserName();
+    private final String password = RandomDataUtils.randomPassword();
 
     @Test
     void shouldShowErrorIfPasswordAndConfirmPasswordAreNotEqual() {
@@ -35,8 +35,6 @@ public class SignUpWebTest {
 
     @Test
     void shouldRegisterAndLoginNewUser() {
-//        String login = Utils.generateRandomString(5);
-//        String password = Utils.generateRandomString(5);
         open(CFG.frontUrl(), LoginPage.class)
                 .createAccount()
                 .succeedSignUp(login, password, password)
