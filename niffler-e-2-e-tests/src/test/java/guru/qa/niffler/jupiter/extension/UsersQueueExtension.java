@@ -67,7 +67,7 @@ public class UsersQueueExtension implements
                 );
 
         Arrays.stream(context.getRequiredTestMethod().getParameters())
-                .filter(p -> AnnotationSupport.isAnnotated(p, UserType.class))
+                .filter(p -> AnnotationSupport.isAnnotated(p, UserType.class) && p.getType().isAssignableFrom(StaticUser.class))
                 .forEach(p -> {
                     UserType userType = p.getAnnotation(UserType.class);
                     StaticUser user = fetchUser(userType.value());
@@ -108,23 +108,22 @@ public class UsersQueueExtension implements
     }
 
 
-
     @Override
     public void afterTestExecution(ExtensionContext context) {
         // Retrieve the map of users that were used in the test
         @SuppressWarnings("unchecked")
-        Map<UserType.Type, StaticUser> userMap = (Map<UserType.Type, StaticUser>) context.getStore(NAMESPACE).get(
+        Map<UserType.Type, StaticUser> map = (Map<UserType.Type, StaticUser>) context.getStore(NAMESPACE).get(
                 context.getUniqueId(),
                 Map.class
         );
-
-        // Return the users to the appropriate queues
-        for (Map.Entry<UserType.Type, StaticUser> entry : userMap.entrySet()) {
-            UserType.Type userType = entry.getKey();
-            StaticUser user = entry.getValue();
-            Queue<StaticUser> queue = getQueueByUserType(userType);
-            queue.offer(user); // Use offer() to add the user back to the queue
-        }
+        if (map != null)
+            // Return the users to the appropriate queues
+            for (Map.Entry<UserType.Type, StaticUser> entry : map.entrySet()) {
+                UserType.Type userType = entry.getKey();
+                StaticUser user = entry.getValue();
+                Queue<StaticUser> queue = getQueueByUserType(userType);
+                queue.offer(user); // Use offer() to add the user back to the queue
+            }
     }
 
 
