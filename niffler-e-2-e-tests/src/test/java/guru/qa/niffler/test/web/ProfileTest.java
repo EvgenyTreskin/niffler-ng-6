@@ -18,7 +18,7 @@ public class ProfileTest {
     private static final MainPage mainPage = new MainPage();
 
     @User(
-            username = "appollo",
+            username = "alice",
             categories = @Category(
                     archived = false
             )
@@ -26,7 +26,7 @@ public class ProfileTest {
     @Test
     void activeCategoryShouldPresentInCategoriesList(CategoryJson categoryJson) {
         open(CFG.frontUrl(), LoginPage.class)
-                .login("appollo", "12345");
+                .login("alice", "12345");
         mainPage.checkStatisticAndHistoryOfSpendingAppear();
         mainPage.clickToProfileUser()
                 .clickArchiveCategory(categoryJson.name())
@@ -35,7 +35,7 @@ public class ProfileTest {
     }
 
     @User(
-            username = "appollo",
+            username = "alice",
             categories = @Category(
                     archived = true
             )
@@ -43,7 +43,7 @@ public class ProfileTest {
     @Test
     void archiveCategoryShouldPresentInCategoriesList(CategoryJson categoryJson) {
         open(CFG.frontUrl(), LoginPage.class)
-                .login("appollo", "12345");
+                .login("alice", "12345");
         mainPage.checkStatisticAndHistoryOfSpendingAppear();
         mainPage.clickToProfileUser()
                 .clickOnCheckboxShowArchived()
