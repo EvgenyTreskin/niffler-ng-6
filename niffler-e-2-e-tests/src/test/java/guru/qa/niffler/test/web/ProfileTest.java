@@ -1,44 +1,55 @@
 package guru.qa.niffler.test.web;
 
-import com.codeborne.selenide.Selenide;
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.jupiter.annotation.Category;
-import guru.qa.niffler.jupiter.annotation.meta.WebTest;
+import guru.qa.niffler.jupiter.annotation.User;
+import guru.qa.niffler.jupiter.extension.BrowserExtension;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.page.LoginPage;
-import guru.qa.niffler.page.ProfilePage;
+import guru.qa.niffler.page.MainPage;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-@WebTest
+import static com.codeborne.selenide.Selenide.open;
+
+@ExtendWith(BrowserExtension.class)
 public class ProfileTest {
+    private static final Config CFG = Config.getInstance();
+    private static final MainPage mainPage = new MainPage();
 
-  private static final Config CFG = Config.getInstance();
+    @User(
+            username = "alice",
+            categories = @Category(
+                    archived = false
+            )
+    )
+    @Test
+    void activeCategoryShouldPresentInCategoriesList(CategoryJson categoryJson) {
+        open(CFG.frontUrl(), LoginPage.class)
+                .login("alice", "12345");
+        mainPage.checkStatisticAndHistoryOfSpendingAppear();
+        mainPage.clickToProfileUser()
+                .clickArchiveCategory(categoryJson.name())
+                .clickCloseOrArchiveOrUnarchiveCategory("Archive")
+                .checkNotCategoryByNameInProfile(categoryJson.name());
+    }
 
-  @Category(
-      username = "duck",
-      archived = true
-  )
-  @Test
-  void archivedCategoryShouldPresentInCategoriesList(CategoryJson category) {
-    Selenide.open(CFG.frontUrl(), LoginPage.class)
-        .successLogin("duck", "12345")
-        .checkThatPageLoaded();
-
-    Selenide.open(CFG.frontUrl() + "profile", ProfilePage.class)
-        .checkArchivedCategoryExists(category.name());
-  }
-
-  @Category(
-      username = "duck",
-      archived = false
-  )
-  @Test
-  void activeCategoryShouldPresentInCategoriesList(CategoryJson category) {
-    Selenide.open(CFG.frontUrl(), LoginPage.class)
-        .successLogin("duck", "12345")
-        .checkThatPageLoaded();
-
-    Selenide.open(CFG.frontUrl() + "profile", ProfilePage.class)
-        .checkCategoryExists(category.name());
-  }
+    @User(
+            username = "alice",
+            categories = @Category(
+                    archived = true
+            )
+    )
+    @Test
+    void archiveCategoryShouldPresentInCategoriesList(CategoryJson categoryJson) {
+        open(CFG.frontUrl(), LoginPage.class)
+                .login("alice", "12345");
+        mainPage.checkStatisticAndHistoryOfSpendingAppear();
+        mainPage.clickToProfileUser()
+                .clickOnCheckboxShowArchived()
+                .clickUnarchiveCategory(categoryJson.name())
+                .clickCloseOrArchiveOrUnarchiveCategory("Unarchive")
+                .clickOnCheckboxShowArchived()
+                .checkCategoryByNameInProfile(categoryJson.name());
+    }
 }

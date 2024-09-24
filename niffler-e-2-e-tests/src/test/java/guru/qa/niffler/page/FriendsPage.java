@@ -1,30 +1,41 @@
 package guru.qa.niffler.page;
 
+import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 
-import static com.codeborne.selenide.CollectionCondition.size;
-import static com.codeborne.selenide.CollectionCondition.textsInAnyOrder;
+import static com.codeborne.selenide.Condition.text;
+import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.$$;
 
 public class FriendsPage {
+    private static final ElementsCollection friendsTable = $$("#friends tr");
+    private static final SelenideElement emptyTableText = $(".css-1m7obeg");
+    private static final ElementsCollection friendsRequestsTable = $$("#requests tr");
+    private static final ElementsCollection allPeopleTable = $$("#all tr");
 
-  private final SelenideElement peopleTab = $("a[href='/people/friends']");
-  private final SelenideElement allTab = $("a[href='/people/all']");
-  private final SelenideElement requestsTable = $("#requests");
-  private final SelenideElement friendsTable = $("#friends");
+    public FriendsPage friendShouldBeInTable(String username) {
+        friendsTable.findBy(text(username)).shouldBe(visible);
+        return this;
+    }
 
-  public FriendsPage checkExistingFriends(String... expectedUsernames) {
-    friendsTable.$$("tr").shouldHave(textsInAnyOrder(expectedUsernames));
-    return this;
-  }
+    public FriendsPage checkEmptyFriendsTable(String message) {
+        emptyTableText.shouldHave(text(message));
+        return this;
+    }
 
-  public FriendsPage checkNoExistingFriends() {
-    friendsTable.$$("tr").shouldHave(size(0));
-    return this;
-  }
+    public FriendsPage requestShouldBeInTable(String username) {
+        friendsRequestsTable.findBy(text(username)).shouldBe(visible);
+        return this;
+    }
 
-  public FriendsPage checkExistingInvitations(String... expectedUsernames) {
-    requestsTable.$$("tr").shouldHave(textsInAnyOrder(expectedUsernames));
-    return this;
-  }
+    public FriendsPage outcomeInvitationShouldBeInTheTable(String username, String waitingText) {
+        allPeopleTable
+                .findBy(text(username))
+                .shouldBe(visible)
+                .$(".css-bvvzrr")
+                .shouldHave(text(waitingText));
+
+        return this;
+    }
 }

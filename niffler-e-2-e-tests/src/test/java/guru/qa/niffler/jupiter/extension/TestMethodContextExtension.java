@@ -4,6 +4,7 @@ import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
+// register with global registration in niffler-e-2-e-tests/src/test/resources/META-INF/services/org.junit.jupiter.api.extension.Extension
 public class TestMethodContextExtension implements BeforeEachCallback, AfterEachCallback {
 
   @Override
