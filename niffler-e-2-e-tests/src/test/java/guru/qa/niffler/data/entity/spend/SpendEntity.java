@@ -34,7 +34,6 @@ public class SpendEntity implements Serializable {
                     json.category()
             )
     );
-    // закончил на 44 минуте видео из урока
     return se;
   }
 }
