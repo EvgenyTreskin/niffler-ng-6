@@ -30,7 +30,7 @@ public class SpendDaoJdbc implements SpendDao {
                 ps.executeUpdate();
 
                 final UUID generatedKey;
-                try (ResultSet rs = ps.getResultSet()) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
                     if (rs.next()){
                         generatedKey = rs.getObject("id", UUID.class);
                     } else {
