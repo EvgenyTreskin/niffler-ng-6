@@ -96,8 +96,6 @@ public class CategoryDaoJdbc implements CategoryDao {
                         return Optional.empty();
                     }
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
