@@ -19,13 +19,13 @@ public class JdbcTest {
                         new Date(),
                         new CategoryJson(
                                 null,
-                                "test-dog-name6",
-                                "dog",
+                                "cat-name-tx-2",
+                                "duck",
                                 false
                         ),
                         CurrencyValues.RUB,
-                        100.0,
-                        "test desk",
+                        1000.0,
+                        "spend-name-tx",
                         "duck"
                 )
         );
