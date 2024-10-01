@@ -25,5 +25,4 @@ public interface Config {
     String currencyJdbcUrl();
 
     String ghUrl();
-
 }
