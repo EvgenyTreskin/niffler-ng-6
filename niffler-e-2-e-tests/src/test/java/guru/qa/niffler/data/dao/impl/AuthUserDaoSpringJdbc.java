@@ -28,7 +28,7 @@ public class AuthUserDaoSpringJdbc implements AuthUserDao {
         jdbcTemplate.update(con -> {
             PreparedStatement ps = con.prepareStatement(
                     "INSERT INTO \"user\" (username, password, enabled, account_non_expired, account_non_locked, credentials_non_expired) " +
-                    "VALUES (?, ?, ?, ?, ?, ?)",
+                            "VALUES (?, ?, ?, ?, ?, ?)",
                     Statement.RETURN_GENERATED_KEYS
             );
             ps.setString(1, user.getUsername());

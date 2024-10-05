@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AuthAuthorityDao {
-
     void create(AuthorityEntity... authAuthority);
 
     Optional<AuthorityEntity> findById(UUID id);

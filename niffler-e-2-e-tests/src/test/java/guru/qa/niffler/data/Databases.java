@@ -28,12 +28,8 @@ public class Databases {
     public record XaFunction<T>(Function<Connection, T> function, String jdbcUrl) {
     }
 
-    ;
-
-    public record XaConsumer<T>(Consumer<Connection> function, String jdbcUrl) {
+    public record XaConsumer(Consumer<Connection> function, String jdbcUrl) {
     }
-
-    ;
 
     public static <T> T transaction(Function<Connection, T> function, String jdbcUrl, int isolationLevel) {
         Connection connection = null;
@@ -78,7 +74,6 @@ public class Databases {
             } catch (SystemException ex) {
                 throw new RuntimeException(ex);
             }
-
             throw new RuntimeException(e);
         }
     }
@@ -87,12 +82,12 @@ public class Databases {
         Connection connection = null;
         try {
             connection = connection(jdbcUrl);
-            connection.setAutoCommit(false);
             connection.setTransactionIsolation(isolationLevel);
+            connection.setAutoCommit(false);
             consumer.accept(connection);
             connection.commit();
             connection.setAutoCommit(true);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             if (connection != null) {
                 try {
                     connection.rollback();
@@ -123,7 +118,6 @@ public class Databases {
             } catch (SystemException ex) {
                 throw new RuntimeException(ex);
             }
-
             throw new RuntimeException(e);
         }
     }

@@ -2,7 +2,7 @@ package guru.qa.niffler.data.dao.impl;
 
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.UdUserDao;
-import guru.qa.niffler.data.entity.spend.UserEntity;
+import guru.qa.niffler.data.entity.userdata.UserEntity;
 import guru.qa.niffler.model.CurrencyValues;
 
 import java.sql.*;
@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class UdUserDaoJdbc implements UdUserDao {
-    private static final Config CFG = Config.getInstance();
+
     private final Connection connection;
 
     public UdUserDaoJdbc(Connection connection) {
@@ -21,7 +21,7 @@ public class UdUserDaoJdbc implements UdUserDao {
 
     public UserEntity create(UserEntity user) {
         try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO user (username, currency, firstname, surname, photo, photo_small, full_name) " +
+                "INSERT INTO \"user\" (username, currency, firstname, surname, photo, photo_small, full_name) " +
                         "VALUES (?,?,?,?,?,?,?)",
                 Statement.RETURN_GENERATED_KEYS
         )) {
@@ -40,7 +40,7 @@ public class UdUserDaoJdbc implements UdUserDao {
                 if (resultSet.next()) {
                     generatedKey = resultSet.getObject("id", UUID.class);
                 } else {
-                    throw new SQLException("Cant find id in ResultSet");
+                    throw new SQLException("Can't find id in ResultSet");
                 }
             }
             user.setId(generatedKey);
@@ -53,7 +53,7 @@ public class UdUserDaoJdbc implements UdUserDao {
     @Override
     public Optional<UserEntity> findById(UUID id) {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT * FROM user WHERE id = ?"
+                "SELECT * FROM \"user\" WHERE id = ?"
         )) {
             statement.setObject(1, id);
             statement.execute();
@@ -83,7 +83,7 @@ public class UdUserDaoJdbc implements UdUserDao {
     @Override
     public Optional<UserEntity> findByUsername(String username) {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT * FROM user WHERE username = ?"
+                "SELECT * FROM \"user\" WHERE username = ?"
         )) {
             statement.setObject(1, username);
             statement.execute();

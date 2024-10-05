@@ -1,9 +1,7 @@
 package guru.qa.niffler.data.dao.impl;
 
 import guru.qa.niffler.data.dao.UdUserDao;
-import guru.qa.niffler.data.entity.auth.AuthUserEntity;
-import guru.qa.niffler.data.entity.spend.UserEntity;
-import guru.qa.niffler.data.mapper.AuthUserEntityRowMapper;
+import guru.qa.niffler.data.entity.userdata.UserEntity;
 import guru.qa.niffler.data.mapper.UdUserEntityRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -37,9 +35,9 @@ public class UdUserDaoSpringJdbc implements UdUserDao {
             ps.setString(2, user.getCurrency().name());
             ps.setString(3, user.getFirstname());
             ps.setString(4, user.getSurname());
-            ps.setString(5, user.getFullname());
-            ps.setBytes(6, user.getPhoto());
+            ps.setBytes(5, user.getPhoto());
             ps.setBytes(6, user.getPhotoSmall());
+            ps.setString(7, user.getFullname());
             return ps;
         }, kh);
         final UUID generatedKey = (UUID) kh.getKeys().get("id");

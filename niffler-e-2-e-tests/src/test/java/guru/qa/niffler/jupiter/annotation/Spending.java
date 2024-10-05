@@ -12,9 +12,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @ExtendWith(SpendingExtension.class)
 public @interface Spending {
-  String category();
+    String category();
 
-  String description();
+    String description();
 
-  double amount();
+    double amount();
 }
