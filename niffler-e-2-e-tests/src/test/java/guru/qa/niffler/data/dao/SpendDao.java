@@ -14,4 +14,6 @@ public interface SpendDao {
     List<SpendEntity> findAllSpendsByUsername(String username);
 
     void deleteSpend(SpendEntity spend);
+
+    List<SpendEntity> findAll();
 }

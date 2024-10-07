@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -100,5 +102,22 @@ public class AuthAuthorityDaoJdbc implements AuthAuthorityDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<AuthorityEntity> findAll() {
+        List<AuthorityEntity> authorities = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM authority");
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                AuthorityEntity authAuthority = new AuthorityEntity();
+                authAuthority.setUserId(rs.getObject("user_id", UUID.class));
+                authAuthority.setAuthority(Authority.valueOf(rs.getString("authority")));
+                authorities.add(authAuthority);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return authorities;
     }
 }
