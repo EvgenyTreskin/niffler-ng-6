@@ -22,7 +22,7 @@ public class JdbcTest {
                         new Date(),
                         new CategoryJson(
                                 null,
-                                "cat-name-tx-2",
+                                "cat-name-tx-3",
                                 "duck",
                                 false
                         ),
@@ -41,7 +41,7 @@ public class JdbcTest {
         UserJson user = usersDbClient.createUser(
                 new UserJson(
                         null,
-                        "valentin-1",
+                        "valentin",
                         null,
                         null,
                         null,
@@ -57,10 +57,10 @@ public class JdbcTest {
     @Test
     void springJdbcTest(){
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUserSpringJdbc(
+        UserJson user = usersDbClient.createUser(
                 new UserJson(
                         null,
-                        "valentin-14",
+                        "valentin-6",
                         null,
                         null,
                         null,
