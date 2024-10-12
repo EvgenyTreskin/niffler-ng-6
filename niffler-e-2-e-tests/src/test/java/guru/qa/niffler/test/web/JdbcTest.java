@@ -22,7 +22,7 @@ public class JdbcTest {
                         new Date(),
                         new CategoryJson(
                                 null,
-                                "cat-name-tx-3",
+                                "cat-name-tx-4",
                                 "duck",
                                 false
                         ),
@@ -36,12 +36,12 @@ public class JdbcTest {
     }
 
     @Test
-    void xaTxTest(){
+    void withSpringJdbcTransactionTest(){
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUser(
+        UserJson user = usersDbClient.createUserWithSpringJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin",
+                        "valentin-11",
                         null,
                         null,
                         null,
@@ -55,12 +55,12 @@ public class JdbcTest {
     }
 
     @Test
-    void springJdbcTest(){
+    void withoutSpringJdbcTransactionTest(){
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUser(
+        UserJson user = usersDbClient.createUserWithoutSpringJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-6",
+                        "valentin-12",
                         null,
                         null,
                         null,
@@ -72,4 +72,80 @@ public class JdbcTest {
         );
         System.out.println(user);
     }
+
+    @Test
+    void withJdbcTransactionTest(){
+        UsersDbClient usersDbClient = new UsersDbClient();
+        UserJson user = usersDbClient.createUserWithJdbcTransaction(
+                new UserJson(
+                        null,
+                        "valentin-13",
+                        null,
+                        null,
+                        null,
+                        CurrencyValues.RUB,
+                        null,
+                        null,
+                        null
+                )
+        );
+        System.out.println(user);
+    }
+
+    @Test
+    void withoutJdbcTransactionTest(){
+        UsersDbClient usersDbClient = new UsersDbClient();
+        UserJson user = usersDbClient.createUserWithoutJdbcTransaction(
+                new UserJson(
+                        null,
+                        "valentin-14",
+                        null,
+                        null,
+                        null,
+                        CurrencyValues.RUB,
+                        null,
+                        null,
+                        null
+                )
+        );
+        System.out.println(user);
+    }
+
+    @Test
+    void withSpringJdbcChainedTransactionTest(){
+        UsersDbClient usersDbClient = new UsersDbClient();
+        UserJson user = usersDbClient.createUserSpringJdbcChainedTransaction(
+                new UserJson(
+                        null,
+                        "valentin-15",
+                        null,
+                        null,
+                        null,
+                        CurrencyValues.RUB,
+                        null,
+                        null,
+                        null
+                )
+        );
+        System.out.println(user);
+    }
+    @Test
+    void withJdbcChainedTransactionTest(){
+        UsersDbClient usersDbClient = new UsersDbClient();
+        UserJson user = usersDbClient.createUserJdbcChainedTransaction(
+                new UserJson(
+                        null,
+                        "valentin-16",
+                        null,
+                        null,
+                        null,
+                        CurrencyValues.RUB,
+                        null,
+                        null,
+                        null
+                )
+        );
+        System.out.println(user);
+    }
+
 }
