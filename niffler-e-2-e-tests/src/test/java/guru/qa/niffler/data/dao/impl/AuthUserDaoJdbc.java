@@ -23,9 +23,7 @@ public class AuthUserDaoJdbc implements AuthUserDao {
     public AuthUserEntity create(AuthUserEntity authUser) {
         try (PreparedStatement statement = holder(CFG.authJdbcUrl()).connection().prepareStatement(
                 "INSERT INTO \"user\" (username, password, enabled, account_non_expired," +
-                        "account_non_locked, credentials_non_expired) VALUES (?,?,?,?,?,?)",
-                Statement.RETURN_GENERATED_KEYS
-        )) {
+                        "account_non_locked, credentials_non_expired) VALUES (?,?,?,?,?,?)")) {
             statement.setString(1, authUser.getUsername());
             statement.setString(2, pe.encode(authUser.getPassword()));
             statement.setBoolean(3, authUser.getEnabled());

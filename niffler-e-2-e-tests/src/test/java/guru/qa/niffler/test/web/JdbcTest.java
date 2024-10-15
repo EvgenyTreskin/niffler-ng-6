@@ -6,6 +6,7 @@ import guru.qa.niffler.model.SpendJson;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.service.SpendDbClient;
 import guru.qa.niffler.service.UsersDbClient;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
@@ -22,7 +23,7 @@ public class JdbcTest {
                         new Date(),
                         new CategoryJson(
                                 null,
-                                "cat-name-tx-4",
+                                "cat-name-tx-6",
                                 "duck",
                                 false
                         ),
@@ -36,12 +37,31 @@ public class JdbcTest {
     }
 
     @Test
+    void springJdbcTest(){
+        UsersDbClient usersDbClient = new UsersDbClient();
+        UserJson user = usersDbClient.createUser(
+                new UserJson(
+                        null,
+                        "valentin-10",
+                        null,
+                        null,
+                        null,
+                        CurrencyValues.RUB,
+                        null,
+                        null,
+                        null
+                )
+        );
+        System.out.println(user);
+    }
+
+    @Test
     void withSpringJdbcTransactionTest(){
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUserWithSpringJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-11",
+                        "valentin-31",
                         null,
                         null,
                         null,
@@ -60,7 +80,7 @@ public class JdbcTest {
         UserJson user = usersDbClient.createUserWithoutSpringJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-12",
+                        "valentin-32",
                         null,
                         null,
                         null,
@@ -79,7 +99,7 @@ public class JdbcTest {
         UserJson user = usersDbClient.createUserWithJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-13",
+                        "valentin-33",
                         null,
                         null,
                         null,
@@ -98,7 +118,7 @@ public class JdbcTest {
         UserJson user = usersDbClient.createUserWithoutJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-14",
+                        "valentin-34",
                         null,
                         null,
                         null,
@@ -112,6 +132,7 @@ public class JdbcTest {
     }
 
     @Test
+    @Disabled("могут падать, сделаны для проверки некорректности использования ChainedTransactionManager")
     void withSpringJdbcChainedTransactionTest(){
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUserSpringJdbcChainedTransaction(
@@ -129,7 +150,10 @@ public class JdbcTest {
         );
         System.out.println(user);
     }
+
+    //    могут падать, сделаны для проверки некорректности использования ChainedTransactionManager
     @Test
+    @Disabled("могут падать, сделаны для проверки некорректности использования ChainedTransactionManager")
     void withJdbcChainedTransactionTest(){
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUserJdbcChainedTransaction(
