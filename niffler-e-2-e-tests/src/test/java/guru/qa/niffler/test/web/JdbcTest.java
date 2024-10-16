@@ -6,15 +6,17 @@ import guru.qa.niffler.model.SpendJson;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.service.SpendDbClient;
 import guru.qa.niffler.service.UsersDbClient;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
+import static guru.qa.niffler.utils.RandomDataUtils.randomUserName;
+
+
 public class JdbcTest {
 
     @Test
-    void txTest(){
+    void txTest() {
         SpendDbClient spendDbClient = new SpendDbClient();
 
         SpendJson spend = spendDbClient.createSpend(
@@ -37,12 +39,12 @@ public class JdbcTest {
     }
 
     @Test
-    void springJdbcTest(){
+    void springJdbcTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUser(
                 new UserJson(
                         null,
-                        "valentin-10",
+                        "valentin-1",
                         null,
                         null,
                         null,
@@ -56,12 +58,12 @@ public class JdbcTest {
     }
 
     @Test
-    void withSpringJdbcTransactionTest(){
+    void withSpringJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUserWithSpringJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-31",
+                        "valentin-2",
                         null,
                         null,
                         null,
@@ -75,12 +77,12 @@ public class JdbcTest {
     }
 
     @Test
-    void withoutSpringJdbcTransactionTest(){
+    void withoutSpringJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUserWithoutSpringJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-32",
+                        "valentin-3",
                         null,
                         null,
                         null,
@@ -94,12 +96,12 @@ public class JdbcTest {
     }
 
     @Test
-    void withJdbcTransactionTest(){
+    void withJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUserWithJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-33",
+                        "valentin-4",
                         null,
                         null,
                         null,
@@ -113,12 +115,12 @@ public class JdbcTest {
     }
 
     @Test
-    void withoutJdbcTransactionTest(){
+    void withoutJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUserWithoutJdbcTransaction(
                 new UserJson(
                         null,
-                        "valentin-34",
+                        "valentin-5",
                         null,
                         null,
                         null,
@@ -132,44 +134,66 @@ public class JdbcTest {
     }
 
     @Test
-    @Disabled("могут падать, сделаны для проверки некорректности использования ChainedTransactionManager")
-    void withSpringJdbcChainedTransactionTest(){
+    void addInvitationToFriendsTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUserSpringJdbcChainedTransaction(
+        UserJson requesterUser = usersDbClient.createUser(
                 new UserJson(
                         null,
-                        "valentin-15",
-                        null,
-                        null,
-                        null,
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
                         CurrencyValues.RUB,
                         null,
                         null,
                         null
-                )
-        );
-        System.out.println(user);
+                ));
+
+        UserJson addresseeUser = usersDbClient.createUser(
+                new UserJson(
+                        null,
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
+                        CurrencyValues.RUB,
+                        null,
+                        null,
+                        null
+                ));
+
+        usersDbClient.addInvitation(requesterUser, addresseeUser);
     }
 
-    //    могут падать, сделаны для проверки некорректности использования ChainedTransactionManager
     @Test
-    @Disabled("могут падать, сделаны для проверки некорректности использования ChainedTransactionManager")
-    void withJdbcChainedTransactionTest(){
+    void addFriendTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUserJdbcChainedTransaction(
+        UserJson firstUser = usersDbClient.createUser(
                 new UserJson(
                         null,
-                        "valentin-16",
-                        null,
-                        null,
-                        null,
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
                         CurrencyValues.RUB,
                         null,
                         null,
                         null
-                )
-        );
-        System.out.println(user);
-    }
+                ));
 
+        UserJson secondUser = usersDbClient.createUser(
+                new UserJson(
+                        null,
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
+                        randomUserName(),
+                        CurrencyValues.RUB,
+                        null,
+                        null,
+                        null
+                ));
+
+        usersDbClient.addFriend(firstUser, secondUser);
+    }
 }
