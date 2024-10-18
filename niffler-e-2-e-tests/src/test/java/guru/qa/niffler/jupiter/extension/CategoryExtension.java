@@ -45,9 +45,7 @@ public class CategoryExtension implements
     @Override
     public void afterTestExecution(ExtensionContext context) {
         CategoryJson category = context.getStore(NAMESPACE).get(context.getUniqueId(), CategoryJson.class);
-        if (category == null) return;
-
-        category = new CategoryJson(
+        if (category != null) category = new CategoryJson(
                 category.id(),
                 category.name(),
                 category.username(),
