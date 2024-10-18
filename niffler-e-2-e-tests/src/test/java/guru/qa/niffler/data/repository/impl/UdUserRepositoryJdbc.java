@@ -77,21 +77,20 @@ public class UdUserRepositoryJdbc implements UdUserRepository {
 
     @Override
     public void addFriend(UserEntity requester, UserEntity addressee) {
-        try (PreparedStatement requesterPs = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
+        try (PreparedStatement requesterAddresseePs = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
                 "INSERT INTO friendship (requester_id, addressee_id, status, created_date) VALUES (?,?,?,?)");
-             PreparedStatement addresseePs = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
-                     "INSERT INTO friendship (requester_id, addressee_id, status, created_date) VALUES (?,?,?,?)")) {
-            requesterPs.setObject(1, requester.getId());
-            requesterPs.setObject(2, addressee.getId());
-            requesterPs.setString(3, FriendshipStatus.ACCEPTED.toString());
-            requesterPs.setDate(4, new java.sql.Date(System.currentTimeMillis()));
-            requesterPs.executeUpdate();
+             ) {
+            requesterAddresseePs.setObject(1, requester.getId());
+            requesterAddresseePs.setObject(2, addressee.getId());
+            requesterAddresseePs.setString(3, FriendshipStatus.ACCEPTED.toString());
+            requesterAddresseePs.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            requesterAddresseePs.executeUpdate();
 
-            addresseePs.setObject(1, addressee.getId());
-            addresseePs.setObject(2, requester.getId());
-            addresseePs.setString(3, FriendshipStatus.ACCEPTED.toString());
-            addresseePs.setDate(4, new java.sql.Date(System.currentTimeMillis()));
-            addresseePs.executeUpdate();
+            requesterAddresseePs.setObject(1, addressee.getId());
+            requesterAddresseePs.setObject(2, requester.getId());
+            requesterAddresseePs.setString(3, FriendshipStatus.ACCEPTED.toString());
+            requesterAddresseePs.setDate(4, new java.sql.Date(System.currentTimeMillis()));
+            requesterAddresseePs.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
