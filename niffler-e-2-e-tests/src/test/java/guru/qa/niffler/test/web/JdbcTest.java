@@ -7,6 +7,8 @@ import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.service.SpendDbClient;
 import guru.qa.niffler.service.UsersDbClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Date;
 
@@ -38,29 +40,24 @@ public class JdbcTest {
         System.out.println(spend);
     }
 
-    @Test
-    void springJdbcTest() {
+    @ValueSource(strings = {
+            "valentin-2",
+            "valentin-3",
+            "valentin-4"
+    })
+    @ParameterizedTest
+    void springJdbcTest(String username) {
         UsersDbClient usersDbClient = new UsersDbClient();
         UserJson user = usersDbClient.createUser(
-                new UserJson(
-                        null,
-                        "valentin-1",
-                        null,
-                        null,
-                        null,
-                        CurrencyValues.RUB,
-                        null,
-                        null,
-                        null
-                )
+                username,
+                "12345"
         );
-        System.out.println(user);
     }
 
     @Test
     void withSpringJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUserWithSpringJdbcTransaction(
+        UserJson user = usersDbClient.createUserSpringJdbcWithTransaction(
                 new UserJson(
                         null,
                         "valentin-2",
@@ -79,7 +76,7 @@ public class JdbcTest {
     @Test
     void withoutSpringJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUserWithoutSpringJdbcTransaction(
+        UserJson user = usersDbClient.createUserSpringJdbcWithoutTransaction(
                 new UserJson(
                         null,
                         "valentin-3",
@@ -98,7 +95,7 @@ public class JdbcTest {
     @Test
     void withJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUserWithJdbcTransaction(
+        UserJson user = usersDbClient.createUserJdbcWithTransaction(
                 new UserJson(
                         null,
                         "valentin-4",
@@ -117,7 +114,7 @@ public class JdbcTest {
     @Test
     void withoutJdbcTransactionTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson user = usersDbClient.createUserWithoutJdbcTransaction(
+        UserJson user = usersDbClient.createUserJdbcWithoutTransaction(
                 new UserJson(
                         null,
                         "valentin-5",
@@ -136,7 +133,7 @@ public class JdbcTest {
     @Test
     void addInvitationToFriendsTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson requesterUser = usersDbClient.createUser(
+        UserJson requesterUser = usersDbClient.createUserSpringJdbcWithTransaction(
                 new UserJson(
                         null,
                         randomUserName(),
@@ -149,7 +146,7 @@ public class JdbcTest {
                         null
                 ));
 
-        UserJson addresseeUser = usersDbClient.createUser(
+        UserJson addresseeUser = usersDbClient.createUserSpringJdbcWithTransaction(
                 new UserJson(
                         null,
                         randomUserName(),
@@ -168,7 +165,7 @@ public class JdbcTest {
     @Test
     void addFriendTest() {
         UsersDbClient usersDbClient = new UsersDbClient();
-        UserJson firstUser = usersDbClient.createUser(
+        UserJson firstUser = usersDbClient.createUserSpringJdbcWithTransaction(
                 new UserJson(
                         null,
                         randomUserName(),
@@ -181,7 +178,7 @@ public class JdbcTest {
                         null
                 ));
 
-        UserJson secondUser = usersDbClient.createUser(
+        UserJson secondUser = usersDbClient.createUserSpringJdbcWithTransaction(
                 new UserJson(
                         null,
                         randomUserName(),
@@ -195,5 +192,19 @@ public class JdbcTest {
                 ));
 
         usersDbClient.addFriend(firstUser, secondUser);
+    }
+
+    @ValueSource(strings = {
+            "valentin-6"
+    })
+    @ParameterizedTest
+    void addIncomeInvitationTest(String username) {
+        UsersDbClient usersDbClient = new UsersDbClient();
+        UserJson user = usersDbClient.createUser(
+                username,
+                "12345"
+        );
+        usersDbClient.addIncomeInvitation(user, 1);
+        usersDbClient.addOutcomeInvitation(user, 1);
     }
 }
