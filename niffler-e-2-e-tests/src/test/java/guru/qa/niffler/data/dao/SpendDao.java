@@ -7,13 +7,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface SpendDao {
+
     SpendEntity create(SpendEntity spend);
 
-    Optional<SpendEntity> findSpendById(UUID id);
-
-    List<SpendEntity> findAllSpendsByUsername(String username);
+    Optional<SpendEntity> findById(UUID id);
 
     void deleteSpend(SpendEntity spend);
 
     List<SpendEntity> findAll();
+
+    SpendEntity update(SpendEntity spend);
 }

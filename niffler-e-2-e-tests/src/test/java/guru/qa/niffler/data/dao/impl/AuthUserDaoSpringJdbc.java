@@ -5,11 +5,11 @@ import guru.qa.niffler.data.dao.AuthUserDao;
 import guru.qa.niffler.data.entity.auth.AuthUserEntity;
 import guru.qa.niffler.data.mapper.AuthUserEntityRowMapper;
 import guru.qa.niffler.data.tpl.DataSources;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
-import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
@@ -46,28 +46,63 @@ public class AuthUserDaoSpringJdbc implements AuthUserDao {
     @Override
     public Optional<AuthUserEntity> findById(UUID id) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.authJdbcUrl()));
-        return Optional.ofNullable(
-                jdbcTemplate.queryForObject(
-                        "SELECT * FROM \"user\" WHERE id = ?",
-                        AuthUserEntityRowMapper.instance,
-                        id
-                )
-        );
+        try {
+            return Optional.ofNullable(
+                    jdbcTemplate.queryForObject(
+                            "SELECT * FROM \"user\" WHERE id = ?",
+                            AuthUserEntityRowMapper.instance,
+                            id
+                    )
+            );
+        } catch (
+                EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
+
 
     @Override
     public Optional<AuthUserEntity> findByUsername(String username) {
-        return Optional.empty();
-    }
-
-    @Override
-    public void deleteById(AuthUserEntity authUser) {
-
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.authJdbcUrl()));
+        try {
+            return Optional.ofNullable(
+                    jdbcTemplate.queryForObject(
+                            "SELECT * FROM \"user\" WHERE username = ?",
+                            AuthUserEntityRowMapper.instance,
+                            username
+                    )
+            );
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     @Override
     public List<AuthUserEntity> findAll() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.authJdbcUrl()));
         return jdbcTemplate.query("SELECT * FROM \"user\"", AuthUserEntityRowMapper.instance);
+    }
+
+    @Override
+    public AuthUserEntity update(AuthUserEntity user) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.authJdbcUrl()));
+        jdbcTemplate.update(
+                "UPDATE \"user\" SET username = ?, password = ?, enabled = ?, account_non_expired = ?" +
+                        ", account_non_locked = ?, credentials_non_expired = ? WHERE id = ?",
+                user.getUsername(),
+                user.getPassword(),
+                user.getEnabled(),
+                user.getAccountNonExpired(),
+                user.getAccountNonLocked(),
+                user.getCredentialsNonExpired(),
+                user.getId()
+        );
+        return user;
+    }
+
+    @Override
+    public void remove(UUID id) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.authJdbcUrl()));
+        jdbcTemplate.update("DELETE FROM \"user\" WHERE id = ?", id);
     }
 }

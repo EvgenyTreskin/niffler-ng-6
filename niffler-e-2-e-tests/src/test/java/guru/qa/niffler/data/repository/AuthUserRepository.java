@@ -7,9 +7,13 @@ import java.util.UUID;
 
 public interface AuthUserRepository {
 
-  AuthUserEntity create(AuthUserEntity user);
+    AuthUserEntity create(AuthUserEntity user);
 
-  Optional<AuthUserEntity> findById(UUID id);
+    Optional<AuthUserEntity> findById(UUID id);
 
-  Optional<AuthUserEntity> findByUsername(String username);
+    Optional<AuthUserEntity> findByUsername(String username);
+
+    AuthUserEntity update(AuthUserEntity user);
+
+    void remove(AuthUserEntity user);
 }

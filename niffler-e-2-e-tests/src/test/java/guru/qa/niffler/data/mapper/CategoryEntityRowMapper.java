@@ -11,7 +11,8 @@ public class CategoryEntityRowMapper implements RowMapper<CategoryEntity> {
 
     public static final CategoryEntityRowMapper instance = new CategoryEntityRowMapper();
 
-    private CategoryEntityRowMapper(){}
+    private CategoryEntityRowMapper() {
+    }
 
 
     @Override

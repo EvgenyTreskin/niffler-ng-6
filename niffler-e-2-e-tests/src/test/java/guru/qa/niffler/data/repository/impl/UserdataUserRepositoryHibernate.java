@@ -8,12 +8,8 @@ import guru.qa.niffler.data.repository.UserdataUserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Optional;
 import java.util.UUID;
-
-import static guru.qa.niffler.data.tpl.Connections.holder;
 
 public class UserdataUserRepositoryHibernate implements UserdataUserRepository {
 
@@ -26,6 +22,12 @@ public class UserdataUserRepositoryHibernate implements UserdataUserRepository {
         entityManager.joinTransaction();
         entityManager.persist(user);
         return user;
+    }
+
+    @Override
+    public UserEntity update(UserEntity user) {
+        entityManager.joinTransaction();
+        return entityManager.merge(user);
     }
 
     @Override
@@ -46,22 +48,15 @@ public class UserdataUserRepositoryHibernate implements UserdataUserRepository {
     }
 
     @Override
-    public void addIncomeInvitation(UserEntity requester, UserEntity addressee) {
+    public void sendInvitation(UserEntity requester, UserEntity addressee) {
         entityManager.joinTransaction();
         addressee.addFriends(FriendshipStatus.PENDING, requester);
     }
 
     @Override
-    public void addOutcomeInvitation(UserEntity requester, UserEntity addressee) {
+    public void remove(UserEntity user) {
         entityManager.joinTransaction();
-        requester.addFriends(FriendshipStatus.PENDING, addressee);
-    }
-
-    @Override
-    public void addInvitation(UserEntity requester, UserEntity addressee) {
-        entityManager.joinTransaction();
-        requester.addFriends(FriendshipStatus.PENDING, addressee);
-        addressee.addFriends(FriendshipStatus.PENDING, requester);
+        entityManager.remove(user);
     }
 
     @Override

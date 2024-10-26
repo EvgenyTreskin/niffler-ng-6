@@ -4,7 +4,10 @@ import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.CategoryDao;
 import guru.qa.niffler.data.entity.spend.CategoryEntity;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +48,7 @@ public class CategoryDaoJdbc implements CategoryDao {
     }
 
     @Override
-    public Optional<CategoryEntity> findCategoryById(UUID id) {
+    public Optional<CategoryEntity> findById(UUID id) {
         try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
                 "SELECT * FROM category WHERE id = ? "
         )) {
@@ -68,57 +71,6 @@ public class CategoryDaoJdbc implements CategoryDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public Optional<CategoryEntity> findCategoryByUsernameAndCategoryName(String username, String categoryName) {
-        try (PreparedStatement statement = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
-                "SELECT * FROM category WHERE username = ? AND name = ?"
-        )) {
-            statement.setString(1, username);
-            statement.setString(2, categoryName);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    CategoryEntity ce = new CategoryEntity();
-
-                    ce.setId(resultSet.getObject("id", UUID.class));
-                    ce.setName(resultSet.getString("name"));
-                    ce.setUsername(resultSet.getString("username"));
-                    ce.setArchived(resultSet.getBoolean("archived"));
-
-                    return Optional.of(ce);
-                } else {
-                    return Optional.empty();
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public List<CategoryEntity> findAllCategoriesByUsername(String username) {
-        List<CategoryEntity> categories = new ArrayList<>();
-        try (PreparedStatement statement = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
-                "SELECT * FROM category WHERE username = ?"
-        )) {
-            statement.setObject(1, username);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                while (resultSet.next()) {
-                    CategoryEntity ce = new CategoryEntity();
-
-                    ce.setId(resultSet.getObject("id", UUID.class));
-                    ce.setName(resultSet.getString("name"));
-                    ce.setUsername(resultSet.getString("username"));
-                    ce.setArchived(resultSet.getBoolean("archived"));
-
-                    categories.add(ce);
-                }
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        return categories;
     }
 
     @Override
@@ -153,5 +105,25 @@ public class CategoryDaoJdbc implements CategoryDao {
             throw new RuntimeException(e);
         }
         return categories;
+    }
+
+    @Override
+    public CategoryEntity update(CategoryEntity category) {
+        try (PreparedStatement ps = holder(CFG.spendJdbcUrl()).connection().prepareStatement(
+                """
+                          UPDATE "category"
+                            SET name     = ?,
+                                archived = ?
+                            WHERE id = ?
+                        """);
+        ) {
+            ps.setString(1, category.getName());
+            ps.setBoolean(2, category.isArchived());
+            ps.setObject(3, category.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return category;
     }
 }
