@@ -9,14 +9,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
-import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class SpendingDaoSpringJdbc implements SpendDao {
+public class SpendDaoSpringJdbc implements SpendDao {
 
     private static final Config CFG = Config.getInstance();
 
@@ -44,13 +43,8 @@ public class SpendingDaoSpringJdbc implements SpendDao {
     }
 
     @Override
-    public Optional<SpendEntity> findSpendById(UUID id) {
+    public Optional<SpendEntity> findById(UUID id) {
         return Optional.empty();
-    }
-
-    @Override
-    public List<SpendEntity> findAllSpendsByUsername(String username) {
-        return List.of();
     }
 
     @Override
@@ -61,5 +55,25 @@ public class SpendingDaoSpringJdbc implements SpendDao {
     public List<SpendEntity> findAll() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.spendJdbcUrl()));
         return jdbcTemplate.query("SELECT * FROM spend", SpendEntityRowMapper.instance);
+    }
+
+    @Override
+    public SpendEntity update(SpendEntity spend) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.spendJdbcUrl()));
+        jdbcTemplate.update("""
+                          UPDATE "spend"
+                            SET spend_date  = ?,
+                                currency    = ?,
+                                amount      = ?,
+                                description = ?
+                            WHERE id = ?
+                        """,
+                new java.sql.Date(spend.getSpendDate().getTime()),
+                spend.getCurrency().name(),
+                spend.getAmount(),
+                spend.getDescription(),
+                spend.getId()
+        );
+        return spend;
     }
 }

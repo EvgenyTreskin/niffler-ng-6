@@ -2,10 +2,13 @@ package guru.qa.niffler.data.dao.impl;
 
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.UdUserDao;
+import guru.qa.niffler.data.entity.userdata.FriendshipEntity;
 import guru.qa.niffler.data.entity.userdata.UserEntity;
 import guru.qa.niffler.model.CurrencyValues;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +41,50 @@ public class UdUserDaoJdbc implements UdUserDao {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public UserEntity update(UserEntity user) {
+        try (PreparedStatement usersPs = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
+                """
+                          UPDATE "user"
+                            SET currency    = ?,
+                                firstname   = ?,
+                                surname     = ?,
+                                photo       = ?,
+                                photo_small = ?
+                            WHERE id = ?
+                        """);
+
+             PreparedStatement friendsPs = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
+                     """
+                             INSERT INTO friendship (requester_id, addressee_id, status)
+                             VALUES (?, ?, ?)
+                             ON CONFLICT (requester_id, addressee_id)
+                                 DO UPDATE SET status = ?
+                             """)
+        ) {
+            usersPs.setString(1, user.getCurrency().name());
+            usersPs.setString(2, user.getFirstname());
+            usersPs.setString(3, user.getSurname());
+            usersPs.setBytes(4, user.getPhoto());
+            usersPs.setBytes(5, user.getPhotoSmall());
+            usersPs.setObject(6, user.getId());
+            usersPs.executeUpdate();
+
+            for (FriendshipEntity fe : user.getFriendshipRequests()) {
+                friendsPs.setObject(1, user.getId());
+                friendsPs.setObject(2, fe.getAddressee().getId());
+                friendsPs.setString(3, fe.getStatus().name());
+                friendsPs.setString(4, fe.getStatus().name());
+                friendsPs.addBatch();
+                friendsPs.clearParameters();
+            }
+            friendsPs.executeBatch();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return user;
     }
 
     @Override
@@ -97,7 +144,7 @@ public class UdUserDaoJdbc implements UdUserDao {
     }
 
     @Override
-    public void delete(UserEntity user) {
+    public void remove(UserEntity user) {
         try (
                 PreparedStatement statement = holder(CFG.userdataJdbcUrl()).connection().prepareStatement(
                         "DELETE FROM user WHERE id = ?"

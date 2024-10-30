@@ -9,7 +9,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
-import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
@@ -41,7 +40,7 @@ public class CategoryDaoSpringJdbc implements CategoryDao {
     }
 
     @Override
-    public Optional<CategoryEntity> findCategoryById(UUID id) {
+    public Optional<CategoryEntity> findById(UUID id) {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.spendJdbcUrl()));
         return Optional.ofNullable(
                 jdbcTemplate.queryForObject(
@@ -53,16 +52,6 @@ public class CategoryDaoSpringJdbc implements CategoryDao {
     }
 
     @Override
-    public Optional<CategoryEntity> findCategoryByUsernameAndCategoryName(String username, String categoryName) {
-        return Optional.empty();
-    }
-
-    @Override
-    public List<CategoryEntity> findAllCategoriesByUsername(String username) {
-        return List.of();
-    }
-
-    @Override
     public void deleteCategory(CategoryEntity category) {
 
     }
@@ -71,5 +60,21 @@ public class CategoryDaoSpringJdbc implements CategoryDao {
     public List<CategoryEntity> findAll() {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.spendJdbcUrl()));
         return jdbcTemplate.query("SELECT * FROM category", CategoryEntityRowMapper.instance);
+    }
+
+    @Override
+    public CategoryEntity update(CategoryEntity category) {
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSources.dataSource(CFG.spendJdbcUrl()));
+        jdbcTemplate.update("""
+                          UPDATE "category"
+                            SET name     = ?,
+                                archived = ?
+                            WHERE id = ?
+                        """,
+                category.getName(),
+                category.isArchived(),
+                category.getId()
+        );
+        return category;
     }
 }

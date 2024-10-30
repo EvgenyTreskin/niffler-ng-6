@@ -3,10 +3,13 @@ package guru.qa.niffler.data.dao.impl;
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.data.dao.AuthUserDao;
 import guru.qa.niffler.data.entity.auth.AuthUserEntity;
+import guru.qa.niffler.data.mapper.AuthUserEntityRowMapper;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -21,24 +24,23 @@ public class AuthUserDaoJdbc implements AuthUserDao {
 
     @Override
     public AuthUserEntity create(AuthUserEntity authUser) {
-        try (PreparedStatement statement = holder(CFG.authJdbcUrl()).connection().prepareStatement(
-                "INSERT INTO \"user\" (username, password, enabled, account_non_expired," +
-                        "account_non_locked, credentials_non_expired) VALUES (?,?,?,?,?,?)")) {
-            statement.setString(1, authUser.getUsername());
-            statement.setString(2, pe.encode(authUser.getPassword()));
-            statement.setBoolean(3, authUser.getEnabled());
-            statement.setBoolean(4, authUser.getAccountNonExpired());
-            statement.setBoolean(5, authUser.getAccountNonLocked());
-            statement.setBoolean(6, authUser.getCredentialsNonExpired());
-
-            statement.executeUpdate();
-
+        try (PreparedStatement ps = holder(CFG.authJdbcUrl()).connection().prepareStatement(
+                "INSERT INTO \"user\" (username, password, enabled, account_non_expired, account_non_locked, credentials_non_expired)" +
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                PreparedStatement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, authUser.getUsername());
+            ps.setString(2, authUser.getPassword());
+            ps.setBoolean(3, authUser.getEnabled());
+            ps.setBoolean(4, authUser.getAccountNonExpired());
+            ps.setBoolean(5, authUser.getAccountNonLocked());
+            ps.setBoolean(6, authUser.getCredentialsNonExpired());
+            ps.executeUpdate();
             final UUID generatedKey;
-            try (ResultSet resultSet = statement.getGeneratedKeys()) {
-                if (resultSet.next()) {
-                    generatedKey = resultSet.getObject("id", UUID.class);
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    generatedKey = rs.getObject("id", UUID.class);
                 } else {
-                    throw new SQLException("Cant find id in ResultSet");
+                    throw new SQLException("Can`t find id in ResultSet");
                 }
             }
             authUser.setId(generatedKey);
@@ -50,25 +52,14 @@ public class AuthUserDaoJdbc implements AuthUserDao {
 
     @Override
     public Optional<AuthUserEntity> findById(UUID id) {
-        try (PreparedStatement statement = holder(CFG.authJdbcUrl()).connection().prepareStatement(
-                "SELECT * FROM \"user\" WHERE id = ?"
-        )) {
-            statement.setObject(1, id);
-            statement.execute();
-            try (ResultSet resultSet = statement.getResultSet()) {
-                if (resultSet.next()) {
-
-                    AuthUserEntity authUser = new AuthUserEntity();
-
-                    authUser.setId(resultSet.getObject("id", UUID.class));
-                    authUser.setUsername(resultSet.getString("username"));
-                    authUser.setPassword(resultSet.getString("password"));
-                    authUser.setEnabled(resultSet.getBoolean("enabled"));
-                    authUser.setAccountNonExpired(resultSet.getBoolean("account_non_expired"));
-                    authUser.setAccountNonLocked(resultSet.getBoolean("account_non_locked"));
-                    authUser.setCredentialsNonExpired(resultSet.getBoolean("credentials_non_expired"));
-
-                    return Optional.of(authUser);
+        try (PreparedStatement ps = holder(CFG.authJdbcUrl()).connection().prepareStatement("SELECT * FROM \"user\" WHERE id = ?")) {
+            ps.setObject(1, id);
+            ps.execute();
+            try (ResultSet rs = ps.getResultSet()) {
+                if (rs.next()) {
+                    return Optional.ofNullable(
+                            AuthUserEntityRowMapper.instance.mapRow(rs, rs.getRow())
+                    );
                 } else {
                     return Optional.empty();
                 }
@@ -79,43 +70,18 @@ public class AuthUserDaoJdbc implements AuthUserDao {
     }
 
     public Optional<AuthUserEntity> findByUsername(String username) {
-        try (PreparedStatement statement = holder(CFG.authJdbcUrl()).connection().prepareStatement(
-                "SELECT * FROM \"user\" WHERE username = ?"
-        )) {
-            statement.setString(1, username);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-
-                    AuthUserEntity authUser = new AuthUserEntity();
-
-                    authUser.setId(resultSet.getObject("id", UUID.class));
-                    authUser.setUsername(resultSet.getString("username"));
-                    authUser.setPassword(resultSet.getString("password"));
-                    authUser.setEnabled(resultSet.getBoolean("enabled"));
-                    authUser.setAccountNonExpired(resultSet.getBoolean("account_non_expired"));
-                    authUser.setAccountNonLocked(resultSet.getBoolean("account_non_locked"));
-                    authUser.setCredentialsNonExpired(resultSet.getBoolean("credentials_non_expired"));
-
-                    return Optional.of(authUser);
+        try (PreparedStatement ps = holder(CFG.authJdbcUrl()).connection().prepareStatement("SELECT * FROM \"user\" WHERE username = ?")) {
+            ps.setString(1, username);
+            ps.execute();
+            try (ResultSet rs = ps.getResultSet()) {
+                if (rs.next()) {
+                    return Optional.ofNullable(
+                            AuthUserEntityRowMapper.instance.mapRow(rs, rs.getRow())
+                    );
+                } else {
+                    return Optional.empty();
                 }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
             }
-
-            return Optional.empty();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void deleteById(AuthUserEntity authUser) {
-        try (PreparedStatement statement = holder(CFG.authJdbcUrl()).connection().prepareStatement(
-                "DELETE FROM \"user\" WHERE id = ?"
-        )) {
-
-            statement.setObject(1, authUser.getId());
-            statement.executeUpdate();
-
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -123,24 +89,59 @@ public class AuthUserDaoJdbc implements AuthUserDao {
 
     @Override
     public List<AuthUserEntity> findAll() {
-        List<AuthUserEntity> users = new ArrayList<>();
-        try (PreparedStatement ps = holder(CFG.authJdbcUrl()).connection().prepareStatement("SELECT * FROM \"user\"")) {
-            try (ResultSet rs = ps.executeQuery()) {
+        try (PreparedStatement ps = holder(CFG.authJdbcUrl()).connection().prepareStatement(
+                "SELECT * FROM \"user\"")) {
+            ps.execute();
+            List<AuthUserEntity> result = new ArrayList<>();
+            try (ResultSet rs = ps.getResultSet()) {
                 while (rs.next()) {
-                    AuthUserEntity user = new AuthUserEntity();
-                    user.setId(rs.getObject("id", UUID.class));
-                    user.setUsername(rs.getString("username"));
-                    user.setPassword(rs.getString("password"));
-                    user.setEnabled(rs.getBoolean("enabled"));
-                    user.setAccountNonExpired(rs.getBoolean("account_non_expired"));
-                    user.setAccountNonLocked(rs.getBoolean("account_non_locked"));
-                    user.setCredentialsNonExpired(rs.getBoolean("credentials_non_expired"));
-                    users.add(user);
+                    result.add(
+                            AuthUserEntityRowMapper.instance.mapRow(rs, rs.getRow())
+                    );
                 }
             }
+            return result;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return users;
+    }
+
+    @Override
+    public AuthUserEntity update(AuthUserEntity user) {
+        try (PreparedStatement ps = holder(CFG.authJdbcUrl()).connection().prepareStatement(
+                """
+                        UPDATE "user" SET 
+                            username = ?, 
+                            password = ?, 
+                            enabled = ?, 
+                            account_non_expired = ?, 
+                            account_non_locked = ?, 
+                            credentials_non_expired = ? 
+                        WHERE id = ?
+                        """)) {
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getPassword());
+            ps.setBoolean(3, user.getEnabled());
+            ps.setBoolean(4, user.getAccountNonExpired());
+            ps.setBoolean(5, user.getAccountNonLocked());
+            ps.setBoolean(6, user.getCredentialsNonExpired());
+            ps.setObject(7, user.getId());
+
+            ps.executeUpdate();
+            return user;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void remove(UUID id) {
+        try (PreparedStatement ps = holder(CFG.authJdbcUrl()).connection().prepareStatement(
+                "DELETE FROM \"user\" WHERE id = ?")) {
+            ps.setObject(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

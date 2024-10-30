@@ -5,13 +5,19 @@ import guru.qa.niffler.data.entity.userdata.UserEntity;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UdUserRepository {
+public interface UserdataUserRepository {
 
     UserEntity create(UserEntity user);
 
+    UserEntity update(UserEntity user);
+
     Optional<UserEntity> findById(UUID id);
 
-    void addInvitation(UserEntity requester, UserEntity addressee);
+    Optional<UserEntity> findByUsername(String username);
 
     void addFriend(UserEntity requester, UserEntity addressee);
+
+    void sendInvitation(UserEntity requester, UserEntity addressee);
+
+    void remove(UserEntity user);
 }
