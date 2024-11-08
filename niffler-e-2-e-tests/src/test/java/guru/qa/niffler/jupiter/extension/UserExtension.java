@@ -1,42 +1,67 @@
 package guru.qa.niffler.jupiter.extension;
 
-import guru.qa.niffler.jupiter.annotation.Spending;
 import guru.qa.niffler.jupiter.annotation.User;
-import guru.qa.niffler.model.*;
-import guru.qa.niffler.service.UserClient;
-import guru.qa.niffler.service.impl.SpendDbClient;
+import guru.qa.niffler.model.SpendJson;
+import guru.qa.niffler.model.TestData;
+import guru.qa.niffler.model.UserJson;
+import guru.qa.niffler.service.UsersClient;
 import guru.qa.niffler.service.impl.UsersDbClient;
 import guru.qa.niffler.utils.RandomDataUtils;
 import org.junit.jupiter.api.extension.*;
 import org.junit.platform.commons.support.AnnotationSupport;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.List;
 
 public class UserExtension implements BeforeEachCallback, ParameterResolver {
 
     public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(UserExtension.class);
     private static final String defaultPassword = "12345";
 
-    private final UserClient usersClient = new UsersDbClient();
+    private final UsersClient usersClient = new UsersDbClient();
 
     @Override
-    public void beforeEach(ExtensionContext context) {
+    public void beforeEach(ExtensionContext context) throws Exception {
         AnnotationSupport.findAnnotation(context.getRequiredTestMethod(), User.class)
                 .ifPresent(userAnno -> {
                     if ("".equals(userAnno.username())) {
-                        final String username = RandomDataUtils.randomUserName();
-                        UserJson testUser = usersClient.createUser(username, defaultPassword);
-                        context.getStore(NAMESPACE).put(
-                                context.getUniqueId(),
-                                testUser.addTestData(
-                                        new TestData(
-                                                defaultPassword,
-                                                new ArrayList<>(),
-                                                new ArrayList<>()
-                                        )
-                                )
-                        );
+                        try {
+                            final String username = RandomDataUtils.randomUsername();
+                            UserJson testUser = usersClient.createUser(username, defaultPassword);
+                            // Добавление друзей и приглашений с проверкой на количество
+                            List<String> friends = new ArrayList<>();
+                            List<String> incomeInvites = new ArrayList<>();
+                            List<String> outcomeInvites = new ArrayList<>();
+
+                            if (userAnno.friends() > 0) {
+                                friends = usersClient.addFriendList(testUser, userAnno.friends());
+                            }
+                            if (userAnno.incomeInvitations() > 0) {
+                                incomeInvites = usersClient.addIncomeInvitationList(testUser, userAnno.incomeInvitations());
+                            }
+                            if (userAnno.outcomeInvitations() > 0) {
+                                outcomeInvites = usersClient.addOutcomeInvitationList(testUser, userAnno.outcomeInvitations());
+                            }
+
+                            // Сохранение пользователя и данных в контексте
+                            context.getStore(NAMESPACE).put(
+                                    context.getUniqueId(),
+                                    testUser.addTestData(
+                                            new TestData(
+                                                    defaultPassword,
+                                                    new ArrayList<>(), // Пустой список для категорий
+                                                    new ArrayList<>(), // Пустой список для трат
+                                                    friends,           // Список друзей
+                                                    incomeInvites,     // Список входящих приглашений
+                                                    outcomeInvites     // Список исходящих приглашений
+                                            )
+                                    )
+                            );
+                        }catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
                     }
                 });
     }

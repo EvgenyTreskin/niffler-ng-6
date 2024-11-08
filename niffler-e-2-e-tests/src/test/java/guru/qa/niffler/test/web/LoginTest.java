@@ -8,13 +8,20 @@ import guru.qa.niffler.jupiter.annotation.User;
 import guru.qa.niffler.jupiter.extension.BrowserExtension;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.page.LoginPage;
+import guru.qa.niffler.page.MainPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import static guru.qa.niffler.utils.RandomDataUtils.randomUsername;
 
 @ExtendWith(BrowserExtension.class)
 public class LoginTest {
 
     private static final Config CFG = Config.getInstance();
+    private static final String STATISTICS_TEXT = "Statistics";
+    private static final String HISTORY_OF_SPENDING_TEXT = "History of Spendings";
+    private static final String FAILED_LOGIN_MESSAGE = "Bad credentials";
+    MainPage mainPage = new MainPage();
 
     @User(
             categories = {
@@ -23,26 +30,26 @@ public class LoginTest {
             },
             spendings = {
                     @Spending(
-                            category = "cat_3", description = "test_spend", amount = 100
+                            category = "cat_3",
+                            description = "test_spend",
+                            amount = 100
                     )
             }
     )
     @Test
     void mainPageShouldBeDisplayedAfterSuccessLogin(UserJson user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
-                .login(user.username(), user.testData().password())
-                .checkStatisticAndHistoryOfSpendingAppear();
+                .login(user.username(), user.testData().password());
+        mainPage.checkStatisticsHeaderContainsText(STATISTICS_TEXT)
+                .checkHistoryOfSpendingHeaderContainsText(HISTORY_OF_SPENDING_TEXT);
     }
 
     @Test
-    void userShouldStayOnLoginPageAfterLoginWithBadCredentialLoginAndShowError() {
+    void userShouldStayOnLoginPageAfterLoginWithBadCredentials() {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
-                .unSucceedLogin("duck", "qwerty");
-    }
-
-    @Test
-    void userShouldStayOnLoginPageAfterLoginWithBadCredentialPasswordAndShowError() {
-        Selenide.open(CFG.frontUrl(), LoginPage.class)
-                .unSucceedLogin("duckyyy", "12345");
+                .setUsername(randomUsername())
+                .setPassword("BAD")
+                .submitButtonClick()
+                .checkFormErrorText(FAILED_LOGIN_MESSAGE);
     }
 }

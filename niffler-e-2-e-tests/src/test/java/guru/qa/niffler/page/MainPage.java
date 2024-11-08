@@ -5,53 +5,60 @@ import com.codeborne.selenide.SelenideElement;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selectors.byText;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$x;
 
 public class MainPage {
 
     private final ElementsCollection tableRows = $("#spendings tbody").$$("tr");
-    private final SelenideElement historyOfSpending = $x("//h2[contains(text(), 'History of Spendings')]");
-    private final SelenideElement statistics = $("canvas[role='img']");
+    private final SelenideElement statisticsHeader = $x("//h2[text()='Statistics']");
+    private final SelenideElement historyOfSpendingHeader = $x("//h2[text()='History of Spendings']");
     private final SelenideElement personIcon = $("[data-testid='PersonIcon']");
-    private final SelenideElement personMenu = $("[role='menu']");
-    private final SelenideElement profileButton = $(byText("Profile"));
-    private final SelenideElement imageInput = $(".image__input-label");
-    private final SelenideElement friendsButton = $("a[href = '/people/friends']");
-    private final SelenideElement allPeopleButton = $("a[href = '/people/all']");
+    private final SelenideElement profileLink = $("a.nav-link[href='/profile']");
+    private final SelenideElement friendsLink = $("a.nav-link[href='/people/friends']");
+    private final SelenideElement allPeopleButton = $x("(//a[@class='link nav-link'])[3]");
+    private final SelenideElement searchInput = $("input[type='text']");
 
     public EditSpendingPage editSpending(String spendingDescription) {
+        searchSpend(spendingDescription);
         tableRows.find(text(spendingDescription)).$$("td").get(5).click();
         return new EditSpendingPage();
     }
 
-    public void checkThatTableContainsSpending(String spendingDescription) {
-        tableRows.find(text(spendingDescription)).shouldBe(visible);
-    }
-
-    public void checkStatisticAndHistoryOfSpendingAppear() {
-        historyOfSpending.shouldBe(visible);
-        statistics.shouldBe(visible);
-    }
-
-    public ProfilePage clickToProfileUser() {
+    public ProfilePage goToProfile() {
         personIcon.click();
-        personMenu.shouldBe(visible);
-        profileButton.click();
-        imageInput.shouldBe(visible);
+        profileLink.click();
         return new ProfilePage();
     }
 
-    public FriendsPage clickToFriendsButton() {
+    public FriendsPage goToFriends() {
         personIcon.click();
-        friendsButton.click();
+        friendsLink.click();
         return new FriendsPage();
     }
 
-    public FriendsPage clickToAllPeopleButton() {
+    public FriendsPage goToAllPeople() {
         personIcon.click();
         allPeopleButton.click();
         return new FriendsPage();
+    }
+
+    public void checkThatTableContainsSpending(String spendingDescription) {
+        searchSpend(spendingDescription);
+        tableRows.find(text(spendingDescription)).should(visible);
+    }
+
+    public MainPage checkStatisticsHeaderContainsText(String value) {
+        statisticsHeader.shouldHave(text(value)).shouldBe(visible);
+        return this;
+    }
+
+    public MainPage checkHistoryOfSpendingHeaderContainsText(String value) {
+        historyOfSpendingHeader.shouldHave(text(value)).shouldBe(visible);
+        return this;
+    }
+
+    public void searchSpend(String spendingDescription) {
+        searchInput.setValue(spendingDescription).pressEnter();
     }
 }
