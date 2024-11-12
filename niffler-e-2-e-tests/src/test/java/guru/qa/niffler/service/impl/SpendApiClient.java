@@ -1,5 +1,6 @@
-package guru.qa.niffler.api;
+package guru.qa.niffler.service.impl;
 
+import guru.qa.niffler.api.SpendApi;
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.CurrencyValues;
@@ -25,15 +26,16 @@ public class SpendApiClient {
     private final SpendApi spendApi = retrofit.create(SpendApi.class);
 
     public SpendJson createSpend(SpendJson spend) {
-        final Response<SpendJson> response;
         try {
-            response = spendApi.addSpend(spend)
-                    .execute();
+            Response<SpendJson> response = spendApi.addSpend(spend).execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                throw new RuntimeException("Failed to create spend: " + response.errorBody().string());
+            }
         } catch (IOException e) {
-            throw new AssertionError(e);
+            throw new RuntimeException("Error while creating spend", e);
         }
-        assertEquals(201, response.code());
-        return response.body();
     }
 
     public SpendJson editSpend(SpendJson spend) {
@@ -87,15 +89,16 @@ public class SpendApiClient {
     }
 
     public CategoryJson createCategory(CategoryJson category) {
-        final Response<CategoryJson> response;
         try {
-            response = spendApi.addCategory(category)
-                    .execute();
+            Response<CategoryJson> response = spendApi.addCategory(category).execute();
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                throw new RuntimeException("Failed to create category: " + response.errorBody().string());
+            }
         } catch (IOException e) {
-            throw new AssertionError(e);
+            throw new RuntimeException("Error while creating category", e);
         }
-        assertEquals(200, response.code());
-        return response.body();
     }
 
     public CategoryJson updateCategory(CategoryJson category) {
@@ -120,5 +123,9 @@ public class SpendApiClient {
         }
         assertEquals(200, response.code());
         return response.body();
+    }
+
+    public void removeCategory(CategoryJson category) {
+        throw new UnsupportedOperationException("Deleting a category is not supported by API");
     }
 }

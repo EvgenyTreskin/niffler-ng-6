@@ -16,7 +16,7 @@ public interface SpendClient {
 
     Optional<SpendJson> findSpendByUsernameAndDescription(String username, String description);
 
-    void deleteSpend(SpendJson spend);
+    void removeSpend(SpendJson spend);
 
     CategoryJson createCategory(CategoryJson category);
 
@@ -26,5 +26,5 @@ public interface SpendClient {
 
     Optional<CategoryJson> findCategoryByUsernameAndCategoryName(String username, String name);
 
-    void deleteCategory(CategoryJson category);
+    void removeCategory(CategoryJson category);
 }
