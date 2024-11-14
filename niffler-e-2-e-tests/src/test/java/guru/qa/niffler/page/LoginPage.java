@@ -16,17 +16,17 @@ public class LoginPage {
 
     public LoginPage setUsername(String username) {
         usernameInput.setValue(username);
-        return new LoginPage();
+        return this;
     }
 
     public LoginPage setPassword(String password) {
         passwordInput.setValue(password);
-        return new LoginPage();
+        return this;
     }
 
     public LoginPage submitButtonClick() {
         submitButton.click();
-        return new LoginPage();
+        return this;
     }
 
     public RegisterPage submitCreateNewAccount() {
