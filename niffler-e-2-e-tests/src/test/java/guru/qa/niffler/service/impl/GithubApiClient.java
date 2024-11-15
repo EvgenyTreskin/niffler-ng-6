@@ -3,6 +3,7 @@ package guru.qa.niffler.service.impl;
 import com.fasterxml.jackson.databind.JsonNode;
 import guru.qa.niffler.api.GhApi;
 import guru.qa.niffler.config.Config;
+import io.qameta.allure.Step;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -26,6 +27,7 @@ public class GithubApiClient {
 
     private final GhApi ghApi = retrofit.create(GhApi.class);
 
+    @Step("Получение статуса задачи")
     public @Nonnull String issueState(String issueNumber) {
         final Response<JsonNode> response;
         try {

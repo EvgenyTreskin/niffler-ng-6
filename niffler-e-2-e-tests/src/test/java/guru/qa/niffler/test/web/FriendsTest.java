@@ -9,7 +9,7 @@ import guru.qa.niffler.page.LoginPage;
 import org.junit.jupiter.api.Test;
 
 @WebTest
-public class FriendsWebTest {
+public class FriendsTest {
     private static final Config CFG = Config.getInstance();
 
     @User(friends = 1)
@@ -17,7 +17,8 @@ public class FriendsWebTest {
     void friendShouldBePresentInFriendsTable(UserJson user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.testData().password())
-                .goToFriends()
+                .getHeader()
+                .toFriendsPage()
                 .shouldHaveMyFriendsListHeader("My friends")
                 .shouldBePresentInFriendsTable(user.testData().friends().get(0));
     }
@@ -27,7 +28,8 @@ public class FriendsWebTest {
     void friendsTableShouldBeEmptyForNewUser(UserJson user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.testData().password())
-                .goToFriends()
+                .getHeader()
+                .toFriendsPage()
                 .shouldHaveEmptyFriendsTable("There are no users yet");
     }
 
@@ -36,7 +38,8 @@ public class FriendsWebTest {
     void incomeInvitationBePresentInFriendsTable(UserJson user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.testData().password())
-                .goToFriends()
+                .getHeader()
+                .toFriendsPage()
                 .shouldFriendRequestList("Friend requests")
                 .shouldBePresentInRequestsTable(user.testData().incomeInvites().get(0));
     }
@@ -46,7 +49,36 @@ public class FriendsWebTest {
     void outcomeInvitationBePresentInAllPeoplesTable(UserJson user) {
         Selenide.open(CFG.frontUrl(), LoginPage.class)
                 .login(user.username(), user.testData().password())
-                .goToAllPeople()
+                .getHeader()
+                .toAllPeoplesPage()
                 .shouldBePresentInAllPeopleTableAndCheckStatus(user.testData().outcomeInvites().get(0), "Waiting...");
+    }
+
+
+    @User(
+            incomeInvitations = 1
+    )
+    @Test
+    void acceptInvitation(UserJson user) {
+        Selenide.open(CFG.frontUrl(), LoginPage.class)
+                .login(user.username(), user.testData().password())
+                .getHeader()
+                .toFriendsPage()
+                .acceptFriend()
+                .shouldHaveMyFriendsListHeader("My friends")
+                .checkUnfriendButtonIsVisible();
+    }
+
+    @User(
+            incomeInvitations = 1
+    )
+    @Test
+    void declineInvitation(UserJson user) {
+        Selenide.open(CFG.frontUrl(), LoginPage.class)
+                .login(user.username(), user.testData().password())
+                .getHeader()
+                .toFriendsPage()
+                .declineFriend()
+                .shouldHaveEmptyFriendsTable("There are no users yet");
     }
 }
