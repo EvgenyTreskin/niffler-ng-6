@@ -41,13 +41,13 @@ public record UserJson(
         this(null, username, null, null, null, null, null, null, null, testData);
     }
 
-    public UserJson addTestData(TestData testData) {
+    public @Nonnull UserJson addTestData(@Nonnull TestData testData) {
         return new UserJson(
                 id, username, firstname, surname, fullname, currency, photo, photoSmall, friendState, testData
         );
     }
 
-    public static UserJson fromEntity(UserEntity entity, FriendState friendState) {
+    public static @Nonnull UserJson fromEntity(@Nonnull UserEntity entity, @Nonnull FriendState friendState) {
         return new UserJson(
                 entity.getId(),
                 entity.getUsername(),
@@ -61,5 +61,4 @@ public record UserJson(
                 null
         );
     }
-
 }

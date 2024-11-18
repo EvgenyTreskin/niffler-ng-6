@@ -2,57 +2,71 @@ package guru.qa.niffler.test.web;
 
 import com.codeborne.selenide.Selenide;
 import guru.qa.niffler.config.Config;
-import guru.qa.niffler.jupiter.extension.BrowserExtension;
+import guru.qa.niffler.jupiter.annotation.Category;
+import guru.qa.niffler.jupiter.annotation.User;
+import guru.qa.niffler.jupiter.annotation.meta.WebTest;
+import guru.qa.niffler.model.CategoryJson;
+import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.page.LoginPage;
-import guru.qa.niffler.page.RegisterPage;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
-import static com.codeborne.selenide.Selenide.open;
-import static guru.qa.niffler.utils.RandomDataUtils.randomPassword;
-import static guru.qa.niffler.utils.RandomDataUtils.randomUsername;
+import static guru.qa.niffler.utils.RandomDataUtils.randomName;
 
-@ExtendWith(BrowserExtension.class)
+@WebTest
 public class ProfileTest {
-
-    RegisterPage registerPage = new RegisterPage();
     private static final Config CFG = Config.getInstance();
-    final String REGISTERED_USER_NAME = "duck";
-    final String EXPECTED_REGISTRATION_MESSAGE = "Congratulations! You've registered!";
-    final String USERNAME_ALREADY_EXISTS_ERROR_TEXT = "Username `duck` already exists";
-    final String PASSWORDS_NOT_EQUAL_ERROR_TEXT = "Passwords should be equal";
-    String password = randomPassword();
 
+    @User(
+            username = "Oleg",
+            categories = @Category(
+                    archived = false
+            )
+    )
     @Test
-    void shouldRegisterNewUser() {
+    void archivedCategoryShouldNotPresentInCategoriesList(CategoryJson[] categories) throws InterruptedException {
+        CategoryJson category = categories[0];
         Selenide.open(CFG.frontUrl(), LoginPage.class)
-                .submitCreateNewAccount();
-        registerPage.setUsername(randomUsername())
-                .setPassword(password)
-                .setPasswordSubmit(password)
-                .submitRegistration()
-                .checkSuccessRegisterNewUser(EXPECTED_REGISTRATION_MESSAGE);
+                .login("Oleg", "12345")
+                .getHeader()
+                .toProfilePage()
+                .clickArchiveButtonForCategoryName(category.name())
+                .clickArchiveButtonSubmit()
+                .shouldBeVisibleArchiveSuccessMessage(category.name())
+                .shouldNotVisibleArchiveCategory(category.name());
     }
 
+    @User(
+            username = "Oleg",
+            categories = @Category(
+                    archived = true
+            )
+    )
     @Test
-    void shouldNotRegisterUserWithExistingUsername() {
+    void activeCategoryShouldPresentInCategoriesList(CategoryJson[] categories) throws InterruptedException {
+        CategoryJson category = categories[0];
         Selenide.open(CFG.frontUrl(), LoginPage.class)
-                .submitCreateNewAccount();
-        registerPage.setUsername(REGISTERED_USER_NAME)
-                .setPassword(password)
-                .setPasswordSubmit(password)
-                .submitRegistration()
-                .checkFormErrorText(USERNAME_ALREADY_EXISTS_ERROR_TEXT);
+                .login("Oleg", "12345")
+                .getHeader()
+                .toProfilePage()
+                .clickShowArchiveCategoryButton()
+                .clickUnarchiveButtonForCategoryName(category.name())
+                .clickUnarchiveButtonSubmit()
+                .shouldBeVisibleUnarchiveSuccessMessage(category.name())
+                .clickShowArchiveCategoryButton()
+                .shouldVisibleActiveCategory(category.name());
     }
 
+    @User
     @Test
-    void shouldShowErrorIfPasswordAndConfirmPasswordAreNotEqual() {
+    void changeName(UserJson user) {
+        String name = randomName();
         Selenide.open(CFG.frontUrl(), LoginPage.class)
-                .submitCreateNewAccount();
-        registerPage.setUsername(randomUsername())
-                .setPassword(randomPassword())
-                .setPasswordSubmit(randomPassword())
-                .submitRegistration()
-                .checkFormErrorText(PASSWORDS_NOT_EQUAL_ERROR_TEXT);
+                .login(user.username(), user.testData().password())
+                .getHeader()
+                .toProfilePage()
+                .setName(name)
+                .clickSaveButton()
+                .shouldBeVisibleSaveChangesSuccessMessage()
+                .checkName(name);
     }
 }

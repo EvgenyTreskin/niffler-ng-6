@@ -1,5 +1,6 @@
 package guru.qa.niffler.test.web;
 
+import guru.qa.niffler.jupiter.annotation.meta.WebTest;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
@@ -12,7 +13,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Date;
 
-
+@WebTest
 public class JdbcTest {
 
     static UsersDbClient usersDbClient = new UsersDbClient();

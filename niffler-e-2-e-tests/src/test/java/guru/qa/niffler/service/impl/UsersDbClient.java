@@ -16,15 +16,20 @@ import guru.qa.niffler.data.tpl.XaTransactionTemplate;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.service.UsersClient;
+import io.qameta.allure.Step;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static guru.qa.niffler.utils.RandomDataUtils.randomUsername;
 
+@ParametersAreNonnullByDefault
 public class UsersDbClient implements UsersClient {
 
     private static final Config CFG = Config.getInstance();
@@ -40,14 +45,19 @@ public class UsersDbClient implements UsersClient {
             CFG.userdataJdbcUrl()
     );
 
+    @Nonnull
+    @Override
+    @Step("Создание нового пользователя: {username}")
     public UserJson createUser(String username, String password) {
-        return xaTransactionTemplate.execute(() -> UserJson.fromEntity(
+        return Objects.requireNonNull(xaTransactionTemplate.execute(() -> UserJson.fromEntity(
                         createNewUser(username, password),
                         null
                 )
-        );
+        ));
     }
 
+    @Override
+    @Step("Добавление {count} входящих приглашений пользователю: {targetUser.username} в БД")
     public void addIncomeInvitation(UserJson targetUser, int count) {
         if (count > 0) {
             UserEntity targetEntity = userdataUserRepositoryHibernate.findById(
@@ -68,7 +78,10 @@ public class UsersDbClient implements UsersClient {
         }
     }
 
+
+    @Nonnull
     @Override
+    @Step("Добавление в БД и возвращения списка  {count} входящих приглашений пользователя: {targetUser.username}")
     public List<String> addIncomeInvitationList(UserJson targetUser, int count) {
         List<String> incomes = new ArrayList<>();
         if (count > 0) {
@@ -85,6 +98,8 @@ public class UsersDbClient implements UsersClient {
         return incomes;
     }
 
+    @Override
+    @Step("Добавление {count} исходящих приглашений пользователю: {targetUser.username} в БД")
     public void addOutcomeInvitation(UserJson targetUser, int count) {
         if (count > 0) {
             UserEntity targetEntity = userdataUserRepositoryHibernate.findById(
@@ -105,6 +120,8 @@ public class UsersDbClient implements UsersClient {
         }
     }
 
+    @Override
+    @Step("Добавление в БД и возвращения списка {count} исходящих приглашений пользователя: {targetUser.username}")
     public List<String> addOutcomeInvitationList(UserJson targetUser, int count) {
         List<String> outcomes = new ArrayList<>();
         if (count > 0) {
@@ -121,8 +138,8 @@ public class UsersDbClient implements UsersClient {
         return outcomes;
     }
 
-
     @Override
+    @Step("Добавление {count} друзей пользователю: {targetUser.username}")
     public void addFriend(UserJson targetUser, int count) {
         if (count > 0) {
             UserEntity targetEntity = userdataUserRepositoryHibernate.findById(
@@ -143,7 +160,9 @@ public class UsersDbClient implements UsersClient {
         }
     }
 
+    @Nonnull
     @Override
+    @Step("Добавление в БД и возвращение списка {count} друзей пользователя: {targetUser.username}")
     public List<String> addFriendList(UserJson targetUser, int count) {
         List<String> friends = new ArrayList<>();
         if (count > 0) {
@@ -160,13 +179,14 @@ public class UsersDbClient implements UsersClient {
         return friends;
     }
 
-
+    @Nonnull
     private UserEntity createNewUser(String username, String password) {
         AuthUserEntity authUser = authUserEntity(username, password);
         authUserRepository.create(authUser);
         return userdataUserRepositoryHibernate.create(userEntity(username));
     }
 
+    @Nonnull
     private UserEntity userEntity(String username) {
         UserEntity ue = new UserEntity();
         ue.setUsername(username);
@@ -174,6 +194,7 @@ public class UsersDbClient implements UsersClient {
         return ue;
     }
 
+    @Nonnull
     private AuthUserEntity authUserEntity(String username, String password) {
         AuthUserEntity authUser = new AuthUserEntity();
         authUser.setUsername(username);
@@ -195,6 +216,7 @@ public class UsersDbClient implements UsersClient {
         return authUser;
     }
 
+    @Nonnull
     private AuthUserEntity authUserEntityJson(UserJson user) {
         AuthUserEntity authUser = new AuthUserEntity();
         authUser.setUsername(user.username());
@@ -216,8 +238,9 @@ public class UsersDbClient implements UsersClient {
         return authUser;
     }
 
+    @Nonnull
     public UserJson createUserSpringJdbcWithTransaction(UserJson user) {
-        return xaTransactionTemplate.execute(() -> {
+        return Objects.requireNonNull(xaTransactionTemplate.execute(() -> {
                     AuthUserEntity authUser = authUserEntityJson(user);
 
                     authUserRepository.create(authUser);
@@ -226,9 +249,10 @@ public class UsersDbClient implements UsersClient {
                             null
                     );
                 }
-        );
+        ));
     }
 
+    @Nonnull
     public UserJson createUserSpringJdbcWithoutTransaction(UserJson user) {
         AuthUserEntity authUser = authUserEntityJson(user);
 
@@ -239,8 +263,10 @@ public class UsersDbClient implements UsersClient {
         );
     }
 
+    @Nonnull
+    @Step("Создание пользователя: {user.username}")
     public UserJson createUserJdbcWithTransaction(UserJson user) {
-        return xaTransactionTemplate.execute(() -> {
+        return Objects.requireNonNull(xaTransactionTemplate.execute(() -> {
                     AuthUserEntity authUser = authUserEntityJson(user);
                     authUserRepository.create(authUser);
                     return UserJson.fromEntity(
@@ -248,9 +274,11 @@ public class UsersDbClient implements UsersClient {
                             null
                     );
                 }
-        );
+        ));
     }
 
+    @Nonnull
+    @Step("Создание пользователя: {user.username}")
     public UserJson createUserJdbcWithoutTransaction(UserJson user) {
         AuthUserEntity authUser = authUserEntityJson(user);
         authUserRepository.create(authUser);
@@ -260,10 +288,12 @@ public class UsersDbClient implements UsersClient {
         );
     }
 
+    @Step("Создание статуса дружбы между: {requester.username} и {addressee.username}")
     public void addFriend(UserJson requester, UserJson addressee) {
         userdataUserRepositoryHibernate.addFriend(UserEntity.fromJson(requester), UserEntity.fromJson(addressee));
     }
 
+    @Step("Создание статуса приглашения в друзья: {requester.username} и {addressee.username}")
     public void addInvitation(UserJson requester, UserJson addressee) {
         userdataUserRepositoryHibernate.sendInvitation(UserEntity.fromJson(requester), UserEntity.fromJson(addressee));
     }
