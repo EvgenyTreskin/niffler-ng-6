@@ -1,22 +1,26 @@
 package guru.qa.niffler.test.web;
 
 import guru.qa.niffler.jupiter.annotation.meta.WebTest;
+import guru.qa.niffler.jupiter.extension.UsersClientExtension;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
 import guru.qa.niffler.model.UserJson;
+import guru.qa.niffler.service.UsersClient;
 import guru.qa.niffler.service.impl.SpendDbClient;
-import guru.qa.niffler.service.impl.UsersDbClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.IOException;
 import java.util.Date;
 
 @WebTest
+@ExtendWith(UsersClientExtension.class)
 public class JdbcTest {
 
-    static UsersDbClient usersDbClient = new UsersDbClient();
+    private UsersClient usersClient;
 
     @Test
     void txTest() {
@@ -47,14 +51,14 @@ public class JdbcTest {
             "valentin-22"
     })
     @ParameterizedTest
-    void springJdbcTest(String uname) {
+    void springJdbcTest(String uname) throws IOException {
 
-        UserJson user = usersDbClient.createUser(
+        UserJson user = usersClient.createUser(
                 uname,
                 "12345"
         );
 
-        usersDbClient.addIncomeInvitation(user, 1);
-        usersDbClient.addOutcomeInvitation(user, 1);
+        usersClient.addIncomeInvitation(user, 1);
+        usersClient.addOutcomeInvitation(user, 1);
     }
 }

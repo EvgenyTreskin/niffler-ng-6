@@ -1,87 +1,66 @@
-package guru.qa.niffler.service.impl;
+package guru.qa.niffler.api.impl;
 
-import guru.qa.niffler.api.AuthApi;
 import guru.qa.niffler.api.UserApi;
-import guru.qa.niffler.config.Config;
+import guru.qa.niffler.api.core.RestClient;
+import guru.qa.niffler.api.core.ThreadSafeCookieStore;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.service.UsersClient;
 import io.qameta.allure.Step;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
+import wiremock.com.google.common.base.Stopwatch;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
-
-import static guru.qa.niffler.utils.RandomDataUtils.randomUsername;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static guru.qa.niffler.utils.RandomDataUtils.randomUsername;
 
 @ParametersAreNonnullByDefault
-public class UsersApiClient implements UsersClient {
+public class UsersApiClient extends RestClient implements UsersClient {
 
-    private final Retrofit userRetrofit = new Retrofit.Builder()
-            .baseUrl(Config.getInstance().userdataUrl())
-            .addConverterFactory(JacksonConverterFactory.create())
-            .build();
-    private final UserApi userApi = userRetrofit.create(UserApi.class);
+    private final AuthApiClient authApiClient = new AuthApiClient();
+    private final UserApi userApi;
 
-    private final Retrofit authRetrofit = new Retrofit.Builder()
-            .baseUrl(Config.getInstance().authUrl())
-            .addConverterFactory(JacksonConverterFactory.create())
-            .build();
-    private final AuthApi authApi = authRetrofit.create(AuthApi.class);
+    public UsersApiClient() {
+        super(CFG.userdataUrl());
+        this.userApi = retrofit.create(UserApi.class);
+    }
 
+    @Nonnull
     @Override
     @Step("Создание пользователя: {username}")
-    public @Nonnull UserJson createUser(String username, String password) throws IOException {
-        // Шаг 1: Запрос формы регистрации для получения CSRF токена
-        final Response<Void> formResponse;
-        try {
-            formResponse = authApi.requestRegisterForm().execute();
-        } catch (IOException e) {
-            throw new AssertionError("Ошибка при выполнении запроса формы регистрации", e);
-        }
+    public UserJson createUser(String username, String password) throws IOException {
+        // Запрос формы регистрации для получения CSRF токена
+        authApiClient.requestRegisterForm();
+        authApiClient.registerUser(
+                username,
+                password,
+                password,
+                ThreadSafeCookieStore.INSTANCE.cookieValue("XSRF-TOKEN")
+        );
 
-        // Убедиться, что запрос формы выполнен успешно
-        assertEquals(200, formResponse.code(), "Ожидался код 200 при запросе формы регистрации");
+        // Ожидание появления пользователя после регистрации
+        long maxWaitTime = 5000L; // 5 секунд ожидания
+        Stopwatch sw = Stopwatch.createStarted();
 
-        // Шаг 2: Извлечение CSRF токена из заголовка ответа
-        String cookieHeader = formResponse.headers().get("Set-Cookie");
-        if (cookieHeader == null || !cookieHeader.contains("XSRF-TOKEN")) {
-            throw new AssertionError("Не удалось получить XSRF-TOKEN из заголовка Set-Cookie");
-        }
-
-        String csrfToken = null;
-        for (String cookie : cookieHeader.split(";")) {
-            if (cookie.contains("XSRF-TOKEN")) {
-                csrfToken = cookie.split("=")[1].trim();
-                break;
+        while (sw.elapsed(TimeUnit.MILLISECONDS) < maxWaitTime) {
+            try {
+                UserJson userJson = userApi.getCurrentUser(username).execute().body();
+                if (userJson != null && userJson.id() != null) {
+                    return userJson; // Пользователь найден, возвращаем
+                } else {
+                    Thread.sleep(100); // Ожидание перед следующей проверкой
+                }
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException("Ошибка при выполнении запроса на получение пользователя или ожидании", e);
             }
         }
-
-        if (csrfToken == null) {
-            throw new AssertionError("XSRF-TOKEN не найден в заголовке Set-Cookie");
-        }
-
-        // Шаг 3: Отправка запроса на регистрацию пользователя
-        final Response<Void> registerResponse;
-        try {
-            registerResponse = authApi.register(username, password, password, csrfToken).execute();
-        } catch (IOException e) {
-            throw new AssertionError("Ошибка при выполнении запроса регистрации пользователя", e);
-        }
-
-        assertEquals(201, registerResponse.code(), "Ожидался код 201 для успешной регистрации");
-
-        // Шаг 4: Получение информации о созданном пользователе
-        return Objects.requireNonNull(getCurrentUser(username), "Пользователь не был найден после регистрации");
+        // Если пользователь не найден за отведенное время
+        throw new AssertionError("Пользователь не был найден в системе после истечения времени ожидания");
     }
 
     @Override
@@ -126,9 +105,10 @@ public class UsersApiClient implements UsersClient {
         }
     }
 
+    @Nonnull
     @Override
     @Step("Добавление в БД и возвращения списка  {count} входящих приглашений пользователя: {targetUser.username}")
-    public @Nonnull List<String> addIncomeInvitationList(UserJson targetUser, int count) throws IOException {
+    public List<String> addIncomeInvitationList(UserJson targetUser, int count) throws IOException {
         List<String> incomeUsers = new ArrayList<>();
 
         if (count > 0) {
@@ -152,9 +132,10 @@ public class UsersApiClient implements UsersClient {
         return incomeUsers;
     }
 
+    @Nonnull
     @Override
     @Step("Добавление в БД и возвращения списка {count} исходящих приглашений пользователя: {targetUser.username}")
-    public @Nonnull List<String> addOutcomeInvitationList(UserJson targetUser, int count) throws IOException {
+    public List<String> addOutcomeInvitationList(UserJson targetUser, int count) throws IOException {
         List<String> outcomeUsers = new ArrayList<>();
 
         if (count > 0) {
@@ -228,8 +209,9 @@ public class UsersApiClient implements UsersClient {
         return friends;
     }
 
+    @Nullable
     @Step("Получение текущего пользователя: {username}")
-    public @Nullable UserJson getCurrentUser(String username) throws IOException {
+    public UserJson getCurrentUser(String username) throws IOException {
         Response<UserJson> response = userApi.getCurrentUser(username).execute();
         if (response.isSuccessful() && response.body() != null) {
             return response.body();
@@ -238,8 +220,9 @@ public class UsersApiClient implements UsersClient {
         }
     }
 
+    @Nullable
     @Step("Обновление текущего пользователя: {user.username}")
-    public @Nullable UserJson updateUser(UserJson user) throws IOException {
+    public UserJson updateUser(UserJson user) throws IOException {
         Response<UserJson> response = userApi.updateUser(user).execute();
         if (response.isSuccessful() && response.body() != null) {
             return response.body();
@@ -248,8 +231,9 @@ public class UsersApiClient implements UsersClient {
         }
     }
 
+    @Nonnull
     @Step("Получение пользователя с именем: {username}")
-    public @Nonnull List<UserJson> getAllUsers(String username, String searchQuery) throws IOException {
+    public List<UserJson> getAllUsers(String username, String searchQuery) throws IOException {
         Response<List<UserJson>> response = userApi.getAllUsers(username, searchQuery).execute();
         if (response.isSuccessful() && response.body() != null) {
             return response.body();
@@ -258,8 +242,9 @@ public class UsersApiClient implements UsersClient {
         }
     }
 
+    @Nonnull
     @Step("Добавление статуса друзей пользователям: {username}")
-    public @Nonnull List<UserJson> getFriends(String username, String searchQuery) throws IOException {
+    public List<UserJson> getFriends(String username, String searchQuery) throws IOException {
         Response<List<UserJson>> response = userApi.getFriends(username, searchQuery).execute();
         if (response.isSuccessful() && response.body() != null) {
             return response.body();
@@ -268,8 +253,9 @@ public class UsersApiClient implements UsersClient {
         }
     }
 
+    @Nullable
     @Step("Отправка приглашения от пользователя пользователю: {username}")
-    public @Nullable UserJson sendInvitation(String username, String targetUsername) throws IOException {
+    public UserJson sendInvitation(String username, String targetUsername) throws IOException {
         Response<UserJson> response = userApi.sendInvitation(username, targetUsername).execute();
         if (response.isSuccessful() && response.body() != null) {
             return response.body();
@@ -278,8 +264,9 @@ public class UsersApiClient implements UsersClient {
         }
     }
 
+    @Nullable
     @Step("Отмена приглашения пользователя: {username} от пользователя: {targetUsername}")
-    public @Nullable UserJson declineInvitation(String username, String targetUsername) throws IOException {
+    public UserJson declineInvitation(String username, String targetUsername) throws IOException {
         Response<UserJson> response = userApi.declineInvitation(username, targetUsername).execute();
         if (response.isSuccessful() && response.body() != null) {
             return response.body();

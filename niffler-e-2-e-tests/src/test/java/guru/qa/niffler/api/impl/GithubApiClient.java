@@ -1,4 +1,4 @@
-package guru.qa.niffler.service.impl;
+package guru.qa.niffler.api.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import guru.qa.niffler.api.GhApi;

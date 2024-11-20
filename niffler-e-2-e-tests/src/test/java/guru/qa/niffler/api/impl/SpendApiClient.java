@@ -1,51 +1,70 @@
-package guru.qa.niffler.service.impl;
+package guru.qa.niffler.api.impl;
 
 import guru.qa.niffler.api.SpendApi;
-import guru.qa.niffler.config.Config;
+import guru.qa.niffler.api.core.RestClient;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
+import guru.qa.niffler.service.SpendClient;
 import io.qameta.allure.Step;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
+import static java.util.Objects.requireNonNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ParametersAreNonnullByDefault
-public class SpendApiClient {
+public class SpendApiClient extends RestClient implements SpendClient {
 
-    private final Retrofit retrofit = new Retrofit.Builder()
-            .baseUrl(Config.getInstance().spendUrl())
-            .addConverterFactory(JacksonConverterFactory.create())
-            .build();
+    private final SpendApi spendApi;
 
-    private final SpendApi spendApi = retrofit.create(SpendApi.class);
-
-    @Step("Создание новой траты")
-    public @Nullable SpendJson createSpend(SpendJson spend) {
-        try {
-            Response<SpendJson> response = spendApi.addSpend(spend).execute();
-            if (response.isSuccessful()) {
-                return response.body();
-            } else {
-                throw new RuntimeException("Failed to create spend: " + response.errorBody().string());
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error while creating spend", e);
-        }
+    public SpendApiClient() {
+        super(CFG.spendUrl());
+        this.spendApi = retrofit.create(SpendApi.class);
     }
 
+    @Nonnull
+    @Step("Создание новой траты")
+    public SpendJson createSpend(SpendJson spend) {
+        final Response<SpendJson> response;
+        try {
+            response = spendApi.addSpend(spend)
+                    .execute();
+        } catch (IOException e) {
+            throw new AssertionError(e);
+        }
+        assertEquals(201, response.code(), "Ожидался код 201 для создания траты");
+        return requireNonNull(response.body(), "Ответ API вернул null при создании траты");
+    }
+
+    @Override
+    public SpendJson updateSpend(SpendJson spend) {
+        return null;
+    }
+
+    @Override
+    public Optional<SpendJson> findSpendById(UUID id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<SpendJson> findSpendByUsernameAndDescription(String username, String description) {
+        return Optional.empty();
+    }
+
+    @Override
+    public void removeSpend(SpendJson spend) {
+
+    }
+
+    @Nullable
     @Step("Редактирование траты")
-    public @Nullable SpendJson editSpend(SpendJson spend) {
+    public SpendJson editSpend(SpendJson spend) {
         final Response<SpendJson> response;
         try {
             response = spendApi.editSpend(spend)
@@ -57,8 +76,9 @@ public class SpendApiClient {
         return response.body();
     }
 
+    @Nullable
     @Step("Получение {count} траты: {username}")
-    public @Nullable SpendJson getSpend(String id, String username) {
+    public SpendJson getSpend(String id, String username) {
         final Response<SpendJson> response;
         try {
             response = spendApi.getSpend(id, username)
@@ -70,8 +90,9 @@ public class SpendApiClient {
         return response.body();
     }
 
+    @Nonnull
     @Step("Получение всех трат пользователя: {username}")
-    public @Nonnull List<SpendJson> allSpends(String username,
+    public List<SpendJson> allSpends(String username,
                                               @Nullable CurrencyValues currency,
                                               @Nullable String from,
                                               @Nullable String to) {
@@ -100,22 +121,23 @@ public class SpendApiClient {
         assertEquals(200, response.code());
     }
 
+    @Nonnull
     @Step("Создание новой категории")
     public CategoryJson createCategory(CategoryJson category) {
+        final Response<CategoryJson> response;
         try {
-            Response<CategoryJson> response = spendApi.addCategory(category).execute();
-            if (response.isSuccessful()) {
-                return response.body();
-            } else {
-                throw new RuntimeException("Failed to create category: " + response.errorBody().string());
-            }
+            response = spendApi.addCategory(category)
+                    .execute();
         } catch (IOException e) {
-            throw new RuntimeException("Error while creating category", e);
+            throw new AssertionError(e);
         }
+        assertEquals(200, response.code(), "Ожидался код 200 для создания категории");
+        return requireNonNull(response.body(), "Ответ API вернул null при создании категории");
     }
 
+    @Nullable
     @Step("Обновление категории")
-    public @Nullable CategoryJson updateCategory(CategoryJson category) {
+    public CategoryJson updateCategory(CategoryJson category) {
         final Response<CategoryJson> response;
         try {
             response = spendApi.updateCategory(category)
@@ -127,8 +149,19 @@ public class SpendApiClient {
         return response.body();
     }
 
+    @Override
+    public Optional<CategoryJson> findCategoryById(UUID id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<CategoryJson> findCategoryByUsernameAndCategoryName(String username, String name) {
+        return Optional.empty();
+    }
+
+    @Nonnull
     @Step("Получение всех категорий пользователя: {username}")
-    public @Nonnull List<CategoryJson> getAllCategories(String username, boolean excludeArchived) {
+    public List<CategoryJson> getAllCategories(String username, boolean excludeArchived) {
         final Response<List<CategoryJson>> response;
         try {
             response = spendApi.getCategories(username, excludeArchived)

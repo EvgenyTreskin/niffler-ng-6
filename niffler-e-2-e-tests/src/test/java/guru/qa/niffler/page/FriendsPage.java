@@ -2,14 +2,21 @@ package guru.qa.niffler.page;
 
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
+import guru.qa.niffler.page.component.SearchField;
 import io.qameta.allure.Step;
+import lombok.Getter;
+
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selectors.byText;
 import static com.codeborne.selenide.Selenide.*;
 
-public class FriendsPage {
+@ParametersAreNonnullByDefault
+public class FriendsPage extends BasePage<FriendsPage> {
+
     private final SelenideElement emptyFriends = $x("//p[text()='There are no users yet']");
     private final SelenideElement myFriendsListHeader = $x("//h2[text()='My friends']");
     private final SelenideElement friendsRequestListHeader = $x("//h2[text()='Friend requests']");
@@ -22,7 +29,10 @@ public class FriendsPage {
     private final SelenideElement unfriendButton = $(byText("Unfriend"));
     private final SelenideElement confirmDeclineButton = $(".MuiDialogActions-spacing [type='button']:nth-child(2)");
 
+    @Getter
+    private final SearchField<FriendsPage> searchField = new SearchField<>(searchInput, this);
 
+    @Nonnull
     @Step("Проверка отображения заголовка списка друзей")
     public FriendsPage shouldHaveMyFriendsListHeader(String expectedHeaderText) {
         myFriendsListHeader.shouldHave(text(expectedHeaderText)).shouldBe(visible);
@@ -37,7 +47,8 @@ public class FriendsPage {
 
     @Step("Проверка наличия друга {friendName} в списке друзей")
     public void shouldBePresentInFriendsTable(String friendName) {
-        searchFriend(friendName);
+        searchField.clearIfNotEmpty()
+                .search(friendName);
         friendsRows.findBy(text(friendName)).shouldBe(visible);
     }
 
@@ -46,6 +57,7 @@ public class FriendsPage {
         emptyFriends.shouldHave(text(message)).shouldBe(visible);
     }
 
+    @Nonnull
     @Step("Проверка отображения заголовка списка запросов")
     public FriendsPage shouldFriendRequestList(String expectedHeaderText) {
         friendsRequestListHeader.shouldHave(text(expectedHeaderText)).shouldBe(visible);
@@ -63,12 +75,14 @@ public class FriendsPage {
         searchInput.setValue(friendName).pressEnter();
     }
 
+    @Nonnull
     @Step("Принять заявку в друзья")
     public FriendsPage acceptFriend() {
         acceptButton.click();
         return this;
     }
 
+    @Nonnull
     @Step("Отклонить заявку в друзья")
     public FriendsPage declineFriend() {
         declineButton.click();
