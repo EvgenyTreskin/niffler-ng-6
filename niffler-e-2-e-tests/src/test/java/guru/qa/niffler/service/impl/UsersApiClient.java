@@ -43,13 +43,15 @@ public class UsersApiClient implements UsersClient {
                     password,
                     ThreadSafeCookieStore.INSTANCE.cookieValue("XSRF-TOKEN")
             ).execute();
+            Thread.sleep(500);
             UserJson createdUser = requireNonNull(userdataApi.currentUser(username).execute().body());
+            System.out.println("Созданный через API user " + createdUser.username());
             return createdUser.addTestData(
                     new TestData(
                             password
                     )
             );
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -64,11 +66,12 @@ public class UsersApiClient implements UsersClient {
                 try {
                     newUser = createUser(username, defaultPassword);
 
+                    Thread.sleep(500);
                     response = userdataApi.sendInvitation(
                             newUser.username(),
                             targetUser.username()
                     ).execute();
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException e) {
                     throw new AssertionError(e);
                 }
                 assertEquals(200, response.code());
@@ -90,11 +93,12 @@ public class UsersApiClient implements UsersClient {
                 try {
                     newUser = createUser(username, defaultPassword);
 
+                    Thread.sleep(500);
                     response = userdataApi.sendInvitation(
                             targetUser.username(),
                             newUser.username()
                     ).execute();
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
                 assertEquals(200, response.code());
@@ -120,8 +124,10 @@ public class UsersApiClient implements UsersClient {
                             ).username(),
                             targetUser.username()
                     ).execute();
+
+                    Thread.sleep(500);
                     response = userdataApi.acceptInvitation(targetUser.username(), username).execute();
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
                 assertEquals(200, response.code());
