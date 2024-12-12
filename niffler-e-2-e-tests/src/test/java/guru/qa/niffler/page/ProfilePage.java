@@ -88,9 +88,9 @@ public class ProfilePage extends BasePage<ProfilePage> {
         return this;
     }
 
-    @Step("Check photo")
+    @Step("Check avatar")
     @Nonnull
-    public ProfilePage checkPhoto(String path) throws IOException {
+    public ProfilePage checkAvatar(String path) throws IOException {
         final byte[] photoContent;
         try (InputStream is = new ClassPathResource(path).getInputStream()) {
             photoContent = Base64.getEncoder().encode(is.readAllBytes());
