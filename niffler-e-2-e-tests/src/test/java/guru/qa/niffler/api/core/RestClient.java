@@ -57,7 +57,7 @@ public abstract class RestClient {
 
     if (interceptors != null) {
       for (Interceptor interceptor : interceptors) {
-        okHttpBuilder.addNetworkInterceptor(interceptor);
+        okHttpBuilder.addNetworkInterceptor(new AllureOkHttp3().setRequestTemplate("request-attachment.ftl").setResponseTemplate("response-attachment.ftl"));
       }
     }
     okHttpBuilder.addNetworkInterceptor(new HttpLoggingInterceptor().setLevel(loggingLevel));
